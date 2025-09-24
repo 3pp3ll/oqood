@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة إنشاء العقود الإلكترونية</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding-top: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .form-section, .preview-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+        .contract-preview {
+            border: 2px dashed #ddd;
+            padding: 30px;
+            min-height: 600px;
+            background: #fff;
+            border-radius: 8px;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+            border-color: #2ecc71;
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+            border-color: #27ae60;
+        }
+        .form-label {
+            font-weight: 600;
+        }
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .saved-contracts {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-top: 25px;
+        }
+        .contract-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+        .contract-item:hover {
+            background-color: #f8f9fa;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .contract-preview, .contract-preview * {
+                visibility: visible;
+            }
+            .contract-preview {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: none;
+                padding: 0;
+            }
+        }
+        .status-connected {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .status-disconnected {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .instructions {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .google-drive-section {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .deployment-options {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+    </style>
+    <!-- مكتبات jsPDF و html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Google APIs -->
+    <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header text-center">
+            <h1 class="display-5"><i class="bi bi-file-earmark-text"></i> منصة إنشاء العقود الإلكترونية</h1>
+            <p class="lead">أنشئ عقودك بسهولة واحفظها في Google Drive للرجوع إليها في أي وقت</p>
+            <p>حالة الاتصال: <span id="connectionStatus" class="status-disconnected">غير متصل بـ Google Drive</span></p>
+        </div>
+
+        <div class="google-drive-section">
+            <h5><i class="bi bi-google"></i> التخزين في Google Drive</h5>
+            <p>قم بتسجيل الدخول إلى حساب Google الخاص بك لحفظ العقود مباشرة في Google Drive:</p>
+            <button id="authButton" class="btn btn-primary"><i class="bi bi-google"></i> تسجيل الدخول إلى Google</button>
+            <button id="signoutButton" class="btn btn-secondary" style="display: none;"><i class="bi bi-box-arrow-right"></i> تسجيل الخروج</button>
+            <span id="userInfo" style="margin-right: 15px;"></span>
+        </div>
+
+        <div class="instructions">
+            <h5><i class="bi bi-info-circle"></i> تعليمات التخزين في Google Drive:</h5>
+            <ol>
+                <li>انقر على "تسجيل الدخول إلى Google" للاتصال بحسابك</li>
+                <li>اسمح للتطبيق بالوصول إلى Google Drive</li>
+                <li>سيتم إنشاء مجلد "العقود الإلكترونية" تلقائياً في Drive</li>
+                <li>سيتم حفظ جميع العقود كملفات PDF في هذا المجلد</li>
+            </ol>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-5">
+                <div class="form-section">
+                    <h3><i class="bi bi-pencil-square"></i> بيانات العقد</h3>
+                    <form id="contractForm">
+                        <div class="mb-3">
+                            <label for="contractTitle" class="form-label">عنوان العقد</label>
+                            <input type="text" class="form-control" id="contractTitle" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="party1" class="form-label">الطرف الأول (البائع/مقدم الخدمة)</label>
+                            <input type="text" class="form-control" id="party1" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="party2" class="form-label">الطرف الثاني (المشتري/المستفيد)</label>
+                            <input type="text" class="form-control" id="party2" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="contractDate" class="form-label">تاريخ العقد</label>
+                            <input type="date" class="form-control" id="contractDate" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="contractValue" class="form-label">قيمة العقد</label>
+                            <input type="number" class="form-control" id="contractValue" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="contractDetails" class="form-label">تفاصيل العقد</label>
+                            <textarea class="form-control" id="contractDetails" rows="4" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="additionalTerms" class="form-label">شروط إضافية</label>
+                            <textarea class="form-control" id="additionalTerms" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="actions">
+                            <button type="button" id="generateBtn" class="btn btn-primary"><i class="bi bi-eye"></i> معاينة العقد</button>
+                            <button type="button" id="saveBtn" class="btn btn-success" disabled><i class="bi bi-cloud-upload"></i> حفظ في Google Drive</button>
+                            <button type="button" id="clearBtn" class="btn btn-secondary"><i class="bi bi-trash"></i> مسح النموذج</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="col-lg-7">
+                <div class="preview-section">
+                    <h3><i class="bi bi-file-text"></i> معاينة العقد</h3>
+                    <div class="contract-preview" id="contractPreview">
+                        <p class="text-center text-muted">سيظهر هنا نموذج العقد بعد إدخال البيانات</p>
+                    </div>
+                    
+                    <div class="actions mt-3">
+                        <button type="button" id="printBtn" class="btn btn-outline-primary"><i class="bi bi-printer"></i> طباعة العقد</button>
+                        <button type="button" id="downloadBtn" class="btn btn-outline-success"><i class="bi bi-file-earmark-pdf"></i> تحميل PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="saved-contracts">
+            <h3><i class="bi bi-folder-check"></i> العقود المحفوظة محلياً</h3>
+            <p class="text-muted">سيتم عرض العقود المحفوظة محلياً هنا (للاستخدام بدون اتصال)</p>
+            <div id="contractsList">
+                <p class="text-center text-muted">لا توجد عقود محفوظة بعد</p>
+            </div>
+        </div>
+
+        <div class="deployment-options">
+            <h4><i class="bi bi-cloud-upload"></i> طرق نشر الصفحة للتشغيل المستمر</h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Netlify</h5>
+                            <p class="card-text">رفع الملفات مباشرة أو ربط بمستودع GitHub</p>
+                            <a href="https://www.netlify.com/" class="btn btn-primary" target="_blank">اذهب إلى Netlify</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Vercel</h5>
+                            <p class="card-text">مثالي للتطبيقات السريعة مع دعم GitHub</p>
+                            <a href="https://vercel.com/" class="btn btn-primary" target="_blank">اذهب إلى Vercel</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">GitHub Pages</h5>
+                            <p class="card-text">مجاني مع GitHub، سهل الإعداد</p>
+                            <a href="https://pages.github.com/" class="btn btn-primary" target="_blank">اذهب إلى GitHub Pages</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const { jsPDF } = window.jspdf;
+            const contractForm = document.getElementById('contractForm');
+            const contractPreview = document.getElementById('contractPreview');
+            const generateBtn = document.getElementById('generateBtn');
+            const printBtn = document.getElementById('printBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const contractsList = document.getElementById('contractsList');
+            const authButton = document.getElementById('authButton');
+            const signoutButton = document.getElementById('signoutButton');
+            const userInfo = document.getElementById('userInfo');
+            const connectionStatus = document.getElementById('connectionStatus');
+            
+            let isGoogleAuthenticated = false;
+            let gapiInited = false;
+            let gisInited = false;
+            
+            // تعيين تاريخ اليوم كتاريخ افتراضي
+            document.getElementById('contractDate').valueAsDate = new Date();
+            
+            // Google API Configuration
+            const API_KEY = 'AIzaSyAZcSGCX1SNwjasMPDec4wBtvYX31osKuM'; // يمكنك استخدام API Key الخاص بك
+            const CLIENT_ID = '231473883440-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com'; // تحتاج إلى إنشاء OAuth Client ID
+            const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+            
+            // معاينة العقد
+            generateBtn.addEventListener('click', generateContract);
+            
+            // طباعة العقد
+            printBtn.addEventListener('click', function() {
+                window.print();
+            });
+            
+            // حفظ البيانات في Google Drive
+            saveBtn.addEventListener('click', async function() {
+                if (!isGoogleAuthenticated) {
+                    alert('الرجاء تسجيل الدخول إلى Google Drive أولاً');
+                    return;
+                }
+                
+                const contractData = getFormData();
+                await saveContractToDrive(contractData);
+            });
+            
+            // مسح النموذج
+            clearBtn.addEventListener('click', function() {
+                if(confirm('هل أنت متأكد من مسح جميع البيانات؟')) {
+                    contractForm.reset();
+                    document.getElementById('contractDate').valueAsDate = new Date();
+                    contractPreview.innerHTML = '<p class="text-center text-muted">سيظهر هنا نموذج العقد بعد إدخال البيانات</p>';
+                }
+            });
+            
+            // تحميل كملف PDF
+            downloadBtn.addEventListener('click', function() {
+                if (contractPreview.innerText.includes('سيظهر هنا نموذج العقد')) {
+                    alert('يرجى إنشاء العقد أولاً قبل التحميل');
+                    return;
+                }
+                
+                generatePDF(false);
+            });
+            
+            // Google Drive Functions
+            function gapiLoaded() {
+                gapi.load('client', initializeGapiClient);
+            }
+            
+            async function initializeGapiClient() {
+                await gapi.client.init({
+                    apiKey: API_KEY,
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                });
+                gapiInited = true;
+                maybeEnableButtons();
+            }
+            
+            function gisLoaded() {
+                gisInited = true;
+                maybeEnableButtons();
+            }
+            
+            function maybeEnableButtons() {
+                if (gapiInited && gisInited) {
+                    authButton.style.visibility = 'visible';
+                }
+            }
+            
+            async function handleAuthClick() {
+                const tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: SCOPES,
+                    callback: (resp) => {
+                        if (resp.error !== undefined) {
+                            throw (resp);
+                        }
+                        isGoogleAuthenticated = true;
+                        connectionStatus.textContent = "متصل بـ Google Drive";
+                        connectionStatus.className = "status-connected";
+                        saveBtn.disabled = false;
+                        authButton.style.display = 'none';
+                        signoutButton.style.display = 'inline-block';
+                        
+                        // الحصول على معلومات المستخدم
+                        gapi.client.drive.about.get({
+                            fields: 'user'
+                        }).then(function(response) {
+                            const user = response.result.user;
+                            userInfo.textContent = `مرحباً، ${user.displayName}`;
+                        });
+                    },
+                });
+                
+                tokenClient.requestAccessToken();
+            }
+            
+            async function handleSignoutClick() {
+                const token = gapi.client.getToken();
+                if (token !== null) {
+                    google.accounts.oauth2.revoke(token.access_token);
+                    gapi.client.setToken('');
+                    isGoogleAuthenticated = false;
+                    connectionStatus.textContent = "غير متصل بـ Google Drive";
+                    connectionStatus.className = "status-disconnected";
+                    saveBtn.disabled = true;
+                    authButton.style.display = 'inline-block';
+                    signoutButton.style.display = 'none';
+                    userInfo.textContent = '';
+                }
+            }
+            
+            async function saveContractToDrive(contractData) {
+                try {
+                    // إنشاء PDF
+                    const pdfBlob = await generatePDF(true);
+                    
+                    // البحث عن مجلد العقود أو إنشاؤه
+                    let folderId = await findOrCreateFolder('العقود الإلكترونية');
+                    
+                    // رفع الملف إلى Google Drive
+                    const fileMetadata = {
+                        name: `عقد - ${contractData.title} - ${contractData.date}.pdf`,
+                        parents: [folderId],
+                        mimeType: 'application/pdf'
+                    };
+                    
+                    const formData = new FormData();
+                    formData.append('metadata', new Blob([JSON.stringify(fileMetadata)], {type: 'application/json'}));
+                    formData.append('file', pdfBlob);
+                    
+                    const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                        method: 'POST',
+                        headers: new Headers({'Authorization': 'Bearer ' + gapi.client.getToken().access_token}),
+                        body: formData,
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.id) {
+                        alert('تم حفظ العقد في Google Drive بنجاح!');
+                        // حفظ محلي أيضاً للنسخ الاحتياطي
+                        saveToLocalStorage(contractData);
+                    } else {
+                        throw new Error('فشل في حفظ الملف');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error saving to Drive:', error);
+                    alert('حدث خطأ أثناء الحفظ في Google Drive: ' + error.message);
+                    // حفظ محلي كبديل
+                    saveToLocalStorage(contractData);
+                    alert('تم حفظ العقد محلياً كبديل');
+                }
+            }
+            
+            async function findOrCreateFolder(folderName) {
+                try {
+                    // البحث عن المجلد
+                    const response = await gapi.client.drive.files.list({
+                        q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+                        fields: 'files(id, name)'
+                    });
+                    
+                    if (response.result.files.length > 0) {
+                        return response.result.files[0].id;
+                    }
+                    
+                    // إنشاء المجلد إذا لم يوجد
+                    const folderMetadata = {
+                        name: folderName,
+                        mimeType: 'application/vnd.google-apps.folder'
+                    };
+                    
+                    const createResponse = await gapi.client.drive.files.create({
+                        resource: folderMetadata,
+                        fields: 'id'
+                    });
+                    
+                    return createResponse.result.id;
+                    
+                } catch (error) {
+                    console.error('Error with folder:', error);
+                    throw error;
+                }
+            }
+            
+            async function generatePDF(forDrive = false) {
+                return new Promise((resolve, reject) => {
+                    html2canvas(contractPreview).then(canvas => {
+                        const imgData = canvas.toDataURL('image/png');
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+                        const imgProps = pdf.getImageProperties(imgData);
+                        const pdfWidth = pdf.internal.pageSize.getWidth();
+                        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                        
+                        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                        
+                        if (forDrive) {
+                            const pdfBlob = pdf.output('blob');
+                            resolve(pdfBlob);
+                        } else {
+                            pdf.save('العقد.pdf');
+                            resolve(null);
+                        }
+                    }).catch(reject);
+                });
+            }
+            
+            function getFormData() {
+                return {
+                    title: document.getElementById('contractTitle').value,
+                    party1: document.getElementById('party1').value,
+                    party2: document.getElementById('party2').value,
+                    date: document.getElementById('contractDate').value,
+                    value: document.getElementById('contractValue').value,
+                    details: document.getElementById('contractDetails').value,
+                    terms: document.getElementById('additionalTerms').value,
+                    timestamp: new Date().toISOString()
+                };
+            }
+            
+            function generateContract() {
+                const data = getFormData();
+                
+                // التحقق من إدخال جميع البيانات المطلوبة
+                if (!data.title || !data.party1 || !data.party2 || !data.date || !data.value || !data.details) {
+                    alert('يرجى ملء جميع الحقول المطلوبة');
+                    return;
+                }
+                
+                // إنشاء محتوى العقد
+                const contractHTML = `
+                    <h2 class="text-center">${data.title}</h2>
+                    <p class="text-center">تحريراً في ${formatDate(data.date)}</p>
+                    <hr>
+                    
+                    <p>بين كل من:</p>
+                    <p><strong>الطرف الأول:</strong> ${data.party1}</p>
+                    <p><strong>الطرف الثاني:</strong> ${data.party2}</p>
+                    
+                    <p>تم الاتفاق بين الطرفين على ما يلي:</p>
+                    <div style="border: 1px solid #eee; padding: 15px; margin: 15px 0; border-radius: 5px;">
+                        ${data.details.replace(/\n/g, '<br>')}
+                    </div>
+                    
+                    <p><strong>قيمة العقد:</strong> ${data.value} ريال سعودي</p>
+                    
+                    ${data.terms ? `
+                    <h4>شروط إضافية:</h4>
+                    <div style="border: 1px solid #eee; padding: 15px; margin: 15px 0; border-radius: 5px;">
+                        ${data.terms.replace(/\n/g, '<br>')}
+                    </div>
+                    ` : ''}
+                    
+                    <div style="margin-top: 60px;">
+                        <div style="width: 45%; float: right;">
+                            <p>توقيع الطرف الأول: _______________</p>
+                            <p>الاسم: ${data.party1}</p>
+                            <p>التاريخ: ${formatDate(data.date)}</p>
+                        </div>
+                        
+                        <div style="width: 45%; float: left;">
+                            <p>توقيع الطرف الثاني: _______________</p>
+                            <p>الاسم: ${data.party2}</p>
+                            <p>التاريخ: ${formatDate(data.date)}</p>
+                        </div>
+                        <div style="clear: both;"></div>
+                    </div>
+                `;
+                
+                contractPreview.innerHTML = contractHTML;
+            }
+            
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('ar-SA', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+            
+            // حفظ محلي للنسخ الاحتياطي
+            function saveToLocalStorage(contractData) {
+                let contracts = JSON.parse(localStorage.getItem('contracts')) || [];
+                contracts.push(contractData);
+                localStorage.setItem('contracts', JSON.stringify(contracts));
+                loadSavedContracts();
+            }
+            
+            function loadSavedContracts() {
+                const contracts = JSON.parse(localStorage.getItem('contracts')) || [];
+                
+                if (contracts.length === 0) {
+                    contractsList.innerHTML = '<p class="text-center text-muted">لا توجد عقود محفوظة بعد</p>';
+                    return;
+                }
+                
+                contractsList.innerHTML = '';
+                contracts.forEach((contract, index) => {
+                    const contractElement = document.createElement('div');
+                    contractElement.className = 'contract-item';
+                    contractElement.innerHTML = `
+                        <h5>${contract.title}</h5>
+                        <p><strong>الأطراف:</strong> ${contract.party1} - ${contract.party2}</p>
+                        <p><strong>القيمة:</strong> ${contract.value} ريال</p>
+                        <p><strong>التاريخ:</strong> ${formatDate(contract.date)}</p>
+                        <button class="btn btn-sm btn-outline-primary view-contract" data-index="${index}">عرض العقد</button>
+                        <button class="btn btn-sm btn-outline-danger delete-contract" data-index="${index}">حذف</button>
+                    `;
+                    contractsList.appendChild(contractElement);
+                });
+                
+                // إضافة مستمعين للأزرار
+                document.querySelectorAll('.view-contract').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        const contracts = JSON.parse(localStorage.getItem('contracts')) || [];
+                        loadContractToForm(contracts[index]);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-contract').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        if(confirm('هل أنت متأكد من حذف هذا العقد؟')) {
+                            let contracts = JSON.parse(localStorage.getItem('contracts')) || [];
+                            contracts.splice(index, 1);
+                            localStorage.setItem('contracts', JSON.stringify(contracts));
+                            loadSavedContracts();
+                        }
+                    });
+                });
+            }
+            
+            function loadContractToForm(contract) {
+                document.getElementById('contractTitle').value = contract.title;
+                document.getElementById('party1').value = contract.party1;
+                document.getElementById('party2').value = contract.party2;
+                document.getElementById('contractDate').value = contract.date;
+                document.getElementById('contractValue').value = contract.value;
+                document.getElementById('contractDetails').value = contract.details;
+                document.getElementById('additionalTerms').value = contract.terms || '';
+                
+                generateContract();
+                window.scrollTo(0, 0);
+            }
+            
+            // إعداد مستمعي الأحداث
+            authButton.addEventListener('click', handleAuthClick);
+            signoutButton.addEventListener('click', handleSignoutClick);
+            
+            // تحميل العقود المحفوظة محلياً
+            loadSavedContracts();
+            
+            // تهيئة Google APIs
+            gapiLoaded();
+            gisLoaded();
+        });
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Google Identity Services -->
+    <script>
+        let tokenClient;
+        let accessToken = null;
+        
+        function gisLoaded() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: '231473883440-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com',
+                scope: 'https://www.googleapis.com/auth/drive.file',
+                callback: (tokenResponse) => {
+                    accessToken = tokenResponse.access_token;
+                },
+            });
+            gisInited = true;
+        }
+    </script>
+</body>
+</html>
