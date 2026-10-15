@@ -8,49 +8,59 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <style>
-:root{--navy:#0f2744;--gold:#c9a84c;--paper:#fff;--ink:#1a2332;--muted:#5c6b7a;--line:#e2ddd4;}
+:root{--navy:#0f2744;--gold:#c9a84c;--ink:#1a2332;--muted:#5c6b7a;--line:#e2ddd4;}
 body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 0%,#f7f5f1 100%);color:var(--ink);min-height:100vh;padding:24px 0 60px;}
-.brand-mark{width:52px;height:52px;background:linear-gradient(135deg,var(--navy),#2a5a8a);color:#fff;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-family:'Amiri',serif;font-size:26px;font-weight:700;box-shadow:0 8px 20px rgba(15,39,68,.25);margin-left:12px;cursor:pointer;user-select:none;}
-.header{background:linear-gradient(135deg,var(--navy) 0%,#1e4a78 50%,#2a5f9e 100%);color:#fff;padding:28px 24px;border-radius:24px;margin-bottom:24px;box-shadow:0 16px 40px rgba(15,39,68,.18);}
-.header h1{font-family:'Amiri',serif;font-weight:700;font-size:2.4rem;margin:0;}
-.header .lead{opacity:.9;font-size:1rem;margin-top:4px;}
-.form-section,.preview-section{background:#fff;padding:24px;border-radius:20px;box-shadow:0 10px 30px rgba(15,39,68,.06);border:1px solid rgba(226,221,212,.6);}
-.section-title{font-family:'Amiri',serif;font-size:1.35rem;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.brand-mark{width:48px;height:48px;background:linear-gradient(135deg,var(--navy),#2a5a8a);color:#fff;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-family:'Amiri',serif;font-size:24px;font-weight:700;box-shadow:0 6px 16px rgba(15,39,68,.25);margin-left:10px;cursor:pointer;user-select:none;}
+.header{background:linear-gradient(135deg,var(--navy) 0%,#1e4a78 50%,#2a5f9e 100%);color:#fff;padding:22px 22px;border-radius:22px;margin-bottom:22px;box-shadow:0 12px 32px rgba(15,39,68,.16);}
+.header h1{font-family:'Amiri',serif;font-weight:700;font-size:2.2rem;margin:0;}
+.header .lead{opacity:.9;font-size:.95rem;margin-top:2px;}
+.form-section,.preview-section{background:#fff;padding:22px;border-radius:18px;box-shadow:0 8px 24px rgba(15,39,68,.05);border:1px solid rgba(226,221,212,.6);}
+.section-title{font-family:'Amiri',serif;font-size:1.3rem;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .req{color:#e74c3c;font-weight:700;}
-.form-label{font-weight:600;color:var(--navy);font-size:.92rem;}
-.form-control,.form-select{border-radius:12px;border:1px solid var(--line);padding:10px 14px;font-size:.95rem;}
-.btn-primary{background:linear-gradient(135deg,#1e4a78,#2a6cb0);border:none;border-radius:12px;padding:10px 18px;font-weight:600;}
-.party-card{background:#fafbfc;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;}
-.party-card h6{font-family:'Amiri',serif;color:var(--navy);margin-bottom:10px;}
-.contract-frame{border:6px double var(--navy);border-radius:10px;padding:4px;background:#fff;}
-.contract-paper{background:#fff;padding:28px 24px;min-height:360px;font-family:'Amiri',serif;font-size:1.05rem;line-height:1.65;color:#1c2430;outline:none;}
-.contract-paper h2,.contract-paper h3{font-family:'Cairo',sans-serif;font-weight:700;color:var(--navy);}
-.contract-paper h2{text-align:center;font-size:1.55rem;margin-bottom:6px;}
-.contract-paper .meta{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:16px;font-family:'Tajawal',sans-serif;}
-.clause-box{background:#fff;border:1px solid #efeae2;border-radius:8px;padding:12px 14px;margin:8px 0;position:relative;}
-.edit-icon{position:absolute;top:6px;left:8px;background:#fff;border:1px solid var(--line);border-radius:6px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--navy);font-size:12px;}
+.form-label{font-weight:600;color:var(--navy);font-size:.9rem;}
+.form-control,.form-select{border-radius:10px;border:1px solid var(--line);padding:9px 12px;font-size:.94rem;}
+.btn-primary{background:linear-gradient(135deg,#1e4a78,#2a6cb0);border:none;border-radius:10px;padding:9px 16px;font-weight:600;}
+.party-card{background:#fafbfc;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;}
+.party-card h6{font-family:'Amiri',serif;color:var(--navy);margin-bottom:8px;}
+.contract-frame{border:5px solid var(--navy);border-radius:4px;padding:0;background:#fff;overflow:hidden;}
+.contract-paper{background:#fff;padding:24px 20px;min-height:320px;font-family:'Amiri',serif;font-size:1.02rem;line-height:1.6;color:#1c2430;outline:none;}
+.contract-paper h2{font-family:'Cairo',sans-serif;font-weight:700;color:var(--navy);text-align:center;font-size:1.45rem;margin:0 0 4px;}
+.contract-paper .meta{text-align:center;color:var(--muted);font-size:.88rem;margin-bottom:12px;font-family:'Tajawal',sans-serif;}
+.clause-box{background:#fff;border:1px solid #f0ebe3;border-radius:6px;padding:10px 12px;margin:6px 0;position:relative;}
+.edit-btn-wrap{position:absolute;top:-14px;left:12px;z-index:2;}
+.edit-icon{background:#fff;border:1px solid var(--line);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--navy);font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.08);}
 .edit-icon:hover{background:var(--navy);color:#fff;}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;}
 .lang-group{display:flex;gap:6px;}
-.lang-group .btn{padding:6px 12px;font-size:.85rem;border-radius:8px;}
-.modal-backdrop{position:fixed;inset:0;background:rgba(30,74,120,.65);z-index:1000;display:none;align-items:center;justify-content:center;}
+.lang-group .btn{padding:5px 11px;font-size:.82rem;border-radius:8px;}
+.modal-backdrop{position:fixed;inset:0;background:#eef2f6;z-index:2000;display:none;align-items:center;justify-content:center;}
 .modal-backdrop.show{display:flex;}
-.modal-box{background:#fff;border-radius:16px;padding:24px;width:min(440px,92vw);box-shadow:0 20px 50px rgba(0,0,0,.25);color:#1a2332;}
-.bilingual{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.bilingual .ar{text-align:right;direction:rtl;}
-.bilingual .en{text-align:left;direction:ltr;font-family:'Cairo',sans-serif;}
-@media print{.edit-icon,.no-print{display:none!important;}.contract-frame{border:none;}}
+.modal-box{background:#fff;border-radius:16px;padding:28px;width:min(440px,92vw);box-shadow:0 20px 50px rgba(15,39,68,.2);color:#1a2332;border:1px solid #d0d7e0;}
+.bilingual-table{width:100%;border-collapse:collapse;margin:8px 0;}
+.bilingual-table td{border:1px solid #eee;padding:10px 12px;vertical-align:top;width:50%;}
+.bilingual-table .ar{text-align:right;direction:rtl;}
+.bilingual-table .en{text-align:left;direction:ltr;font-family:'Cairo',sans-serif;}
+.sig-row{display:flex;justify-content:space-between;margin-top:28px;font-family:'Tajawal',sans-serif;font-size:.9rem;}
+.sig-box{width:46%;}
+.sig-line{border-top:1px solid #ccc;padding-top:6px;margin-top:4px;}
+@media print{.edit-icon,.no-print,.edit-btn-wrap{display:none!important;}.contract-frame{border:5px solid #000;}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-<div class="container" style="max-width:1100px;">
-  <div class="header d-flex align-items-center">
-    <div class="brand-mark" id="logoMark">ع</div>
-    <div>
-      <h1>عقود</h1>
-      <p class="lead mb-0">صياغة قانونية فاخرة كأنها من مكتب محاماة</p>
+<div class="container" style="max-width:1080px;">
+  <div class="header d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div class="d-flex align-items-center">
+      <div class="brand-mark" id="logoMark" title="5 ضغطات للمفتاح">ع</div>
+      <div>
+        <h1>عقود</h1>
+        <p class="lead mb-0">صياغة قانونية فاخرة</p>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-2 no-print">
+      <button type="button" class="btn btn-sm btn-light" id="topLangBtn" title="تغيير اللغة"><i class="bi bi-translate"></i></button>
+      <button type="button" class="btn btn-sm btn-light" id="settingsBtn" title="إعدادات"><i class="bi bi-gear"></i></button>
     </div>
   </div>
 
@@ -61,7 +71,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
         <div class="party-card">
           <h6>الطرف الأول <span class="req">*</span></h6>
           <input class="form-control mb-2" id="p1_name" placeholder="الاسم الكامل">
-          <input class="form-control mb-2" id="p1_id" placeholder="رقم الهوية / الإقامة (10 أرقام)" maxlength="11">
+          <input class="form-control mb-2" id="p1_id" placeholder="رقم الهوية / الإقامة" maxlength="11">
           <input class="form-control mb-2" id="p1_mobile" placeholder="رقم الجوال">
           <input type="date" class="form-control" id="p1_dob">
         </div>
@@ -70,7 +80,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
         <div class="party-card">
           <h6>الطرف الثاني <span class="req">*</span></h6>
           <input class="form-control mb-2" id="p2_name" placeholder="الاسم الكامل">
-          <input class="form-control mb-2" id="p2_id" placeholder="رقم الهوية / الإقامة (10 أرقام)" maxlength="11">
+          <input class="form-control mb-2" id="p2_id" placeholder="رقم الهوية / الإقامة" maxlength="11">
           <input class="form-control mb-2" id="p2_mobile" placeholder="رقم الجوال">
           <input type="date" class="form-control" id="p2_dob">
         </div>
@@ -79,8 +89,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
 
     <div class="section-title mt-3"><i class="bi bi-file-text"></i> تفاصيل العقد</div>
     <div class="row g-3">
-      <div class="col-md-6">
-        <label class="form-label">نوع العقد</label>
+      <div class="col-md-6"><label class="form-label">نوع العقد</label>
         <select class="form-select" id="contractType">
           <option value="service">عقد خدمات / استشارة</option>
           <option value="sale">عقد بيع</option>
@@ -88,38 +97,23 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
           <option value="partnership">عقد شراكة</option>
           <option value="general">اتفاق عام</option>
           <option value="nda">اتفاقية سرية (مستقلة)</option>
-        </select>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">عنوان العقد <span class="req">*</span></label>
-        <input class="form-control" id="contractTitle" placeholder="مثال: تقديم استشارة تقنية">
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">التاريخ</label>
-        <input type="date" class="form-control" id="contractDate">
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">القيمة (ريال)</label>
-        <input type="number" class="form-control" id="contractValue">
-      </div>
+        </select></div>
+      <div class="col-md-6"><label class="form-label">عنوان العقد <span class="req">*</span></label>
+        <input class="form-control" id="contractTitle" placeholder="مثال: تقديم استشارة تقنية"></div>
+      <div class="col-md-6"><label class="form-label">التاريخ</label><input type="date" class="form-control" id="contractDate"></div>
+      <div class="col-md-6"><label class="form-label">القيمة (ريال)</label><input type="number" class="form-control" id="contractValue"></div>
     </div>
-    <div class="mt-3">
-      <label class="form-label">ما تريده في العقد <span class="req">*</span></label>
-      <textarea class="form-control" id="userRequest" rows="4" placeholder="اكتب بلغتك العادية ما تريده..."></textarea>
-    </div>
-    <div class="mt-3">
-      <label class="form-label">شروط إضافية (اختياري)</label>
-      <textarea class="form-control" id="extraTerms" rows="2" placeholder="سرية، عدم منافسة، غرامة تأخير..."></textarea>
-    </div>
+    <div class="mt-3"><label class="form-label">ما تريده في العقد <span class="req">*</span></label>
+      <textarea class="form-control" id="userRequest" rows="4" placeholder="اكتب بلغتك العادية..."></textarea></div>
+    <div class="mt-3"><label class="form-label">شروط إضافية (اختياري)</label>
+      <textarea class="form-control" id="extraTerms" rows="2"></textarea></div>
     <div class="form-check mt-3">
       <input class="form-check-input" type="checkbox" id="includeNDA" checked>
-      <label class="form-check-label" for="includeNDA">إضافة بنود اتفاقية السرية مناسبة للطلب</label>
+      <label class="form-check-label" for="includeNDA">إضافة بنود اتفاقية السرية</label>
     </div>
-
     <div class="mt-3">
-      <label class="form-label">رفع عقد موجود لإعادة صياغته (اختياري)</label>
-      <input type="file" class="form-control" id="uploadContract" accept=".txt,.pdf,.docx,.html">
-      <div class="form-text">يمكن رفع نص أو PDF ليستفيد الذكاء الاصطناعي من بنوده</div>
+      <label class="form-label">رفع عقد للاستفادة من بنوده (اختياري)</label>
+      <input type="file" class="form-control" id="uploadContract" accept=".txt,.pdf,.html">
     </div>
 
     <div class="actions mt-4">
@@ -128,7 +122,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
         <button type="button" class="btn btn-outline-primary" data-lang="en">English</button>
         <button type="button" class="btn btn-outline-primary" data-lang="both">لغتين</button>
       </div>
-      <button type="button" id="aiGenerateBtn" class="btn btn-primary"><i class="bi bi-stars"></i> صياغة قانونية بالذكاء الاصطناعي</button>
+      <button type="button" id="aiGenerateBtn" class="btn btn-primary"><i class="bi bi-stars"></i> صياغة قانونية</button>
       <button type="button" id="clearBtn" class="btn btn-outline-secondary">مسح</button>
     </div>
   </div>
@@ -136,10 +130,10 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
   <div class="preview-section" id="previewSection" style="display:none;">
     <div class="section-title d-flex justify-content-between align-items-center">
       <span><i class="bi bi-file-earmark-text"></i> معاينة العقد</span>
-      <small class="text-muted">قابلة للتعديل مباشرة</small>
+      <button type="button" class="btn btn-sm btn-outline-primary no-print" id="openEditor"><i class="bi bi-pencil"></i> تعديل النص</button>
     </div>
     <div class="contract-frame">
-      <div class="contract-paper" id="contractPreview" contenteditable="true"></div>
+      <div class="contract-paper" id="contractPreview" contenteditable="false"></div>
     </div>
     <div class="actions">
       <button type="button" id="printBtn" class="btn btn-outline-primary"><i class="bi bi-printer"></i> طباعة</button>
@@ -155,14 +149,55 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
   </div>
 </div>
 
+<!-- نافذة المفتاح (خلفية غير شفافة) -->
 <div class="modal-backdrop" id="keyModal">
   <div class="modal-box">
     <h5 class="mb-3" style="font-family:Amiri;color:#0f2744;">مفتاح OpenRouter</h5>
-    <p class="small mb-3" style="color:#333;">يُحفظ في متصفحك فقط. لا يُرسل لأي سيرفر.</p>
+    <p class="small mb-3" style="color:#444;">يُحفظ في متصفحك فقط. لا يُرسل لأي سيرفر.</p>
     <input type="password" class="form-control mb-3" id="apiKeyInput" placeholder="sk-or-v1-...">
     <div class="d-flex gap-2">
       <button type="button" class="btn btn-primary" id="saveKeyBtn">حفظ</button>
       <button type="button" class="btn btn-outline-secondary" id="closeKeyBtn">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة التعديل -->
+<div class="modal-backdrop" id="editorModal">
+  <div class="modal-box" style="width:min(640px,94vw);">
+    <h5 class="mb-3" style="font-family:Amiri;">تعديل النص</h5>
+    <div class="d-flex gap-2 mb-2 flex-wrap">
+      <select class="form-select form-select-sm" id="fontSelect" style="width:auto;">
+        <option value="Amiri, serif">Amiri (رسمي)</option>
+        <option value="Cairo, sans-serif">Cairo (عناوين)</option>
+        <option value="Tajawal, sans-serif">Tajawal</option>
+      </select>
+      <select class="form-select form-select-sm" id="sizeSelect" style="width:auto;">
+        <option value="0.95rem">صغير</option>
+        <option value="1.02rem" selected>عادي</option>
+        <option value="1.15rem">كبير</option>
+      </select>
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="boldBtn"><b>B</b></button>
+      <button type="button" class="btn btn-sm btn-outline-warning" id="highlightBtn">تظليل</button>
+    </div>
+    <div id="editorArea" contenteditable="true" style="border:1px solid #ddd;border-radius:8px;min-height:220px;padding:12px;font-family:Amiri,serif;font-size:1.02rem;line-height:1.6;background:#fff;"></div>
+    <div class="d-flex gap-2 mt-3">
+      <button type="button" class="btn btn-primary" id="applyEdit">تطبيق</button>
+      <button type="button" class="btn btn-outline-secondary" id="closeEditor">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة الإعدادات البسيطة -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal-box">
+    <h5 class="mb-3" style="font-family:Amiri;">إعدادات</h5>
+    <p class="small text-muted">شعار الصفحة (اختياري) — يظهر في أعلى العقد لاحقاً</p>
+    <input type="file" class="form-control mb-3" id="logoUpload" accept="image/*">
+    <div id="logoPreview" class="mb-3"></div>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-primary" id="saveSettings">حفظ</button>
+      <button type="button" class="btn btn-outline-secondary" id="closeSettings">إغلاق</button>
     </div>
   </div>
 </div>
@@ -190,9 +225,27 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('saveKeyBtn').onclick = () => {
     localStorage.setItem('oqood_openrouter_key', document.getElementById('apiKeyInput').value.trim());
     document.getElementById('keyModal').classList.remove('show');
-    alert('تم حفظ المفتاح');
   };
   document.getElementById('closeKeyBtn').onclick = () => document.getElementById('keyModal').classList.remove('show');
+
+  document.getElementById('settingsBtn').onclick = () => document.getElementById('settingsModal').classList.add('show');
+  document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.remove('show');
+  document.getElementById('saveSettings').onclick = () => {
+    const f = document.getElementById('logoUpload').files[0];
+    if (f) {
+      const reader = new FileReader();
+      reader.onload = e => localStorage.setItem('oqood_logo', e.target.result);
+      reader.readAsDataURL(f);
+    }
+    document.getElementById('settingsModal').classList.remove('show');
+    alert('تم حفظ الإعدادات');
+  };
+
+  document.getElementById('topLangBtn').onclick = () => {
+    const langs = ['ar','en','both'];
+    currentLang = langs[(langs.indexOf(currentLang)+1)%3];
+    document.querySelectorAll('[data-lang]').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
+  };
 
   document.getElementById('contractDate').valueAsDate = new Date();
 
@@ -206,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function validateID(id) {
     if (!id) return true;
-    return /^\d{10,11}$/.test(id.replace(/\D/g, ''));
+    return /^\d{10,11}$/.test(id.replace(/\D/g,''));
   }
 
   function collectData() {
@@ -226,15 +279,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function formatDate(d) {
     if (!d) return '';
-    return new Date(d).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
+    return new Date(d).toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
   }
 
   async function generateWithAI() {
     const d = collectData();
     const key = localStorage.getItem('oqood_openrouter_key') || '';
-    if (!key) { alert('أضغط على الشعار "ع" خمس مرات لإدخال مفتاح OpenRouter'); return; }
+    if (!key) { alert('أضغط على الشعار "ع" خمس مرات لإدخال المفتاح'); return; }
     if (!d.p1.name || !d.p2.name || !d.title || !d.userRequest) {
-      alert('يرجى ملء الحقول الإلزامية (الأطراف، العنوان، وما تريده)');
+      alert('يرجى ملء الحقول الإلزامية');
       return;
     }
     if (!validateID(d.p1.id) || !validateID(d.p2.id)) {
@@ -250,13 +303,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let uploadedText = '';
     const fileInput = document.getElementById('uploadContract');
     if (fileInput.files && fileInput.files[0]) {
-      try {
-        uploadedText = await fileInput.files[0].text();
-      } catch(e) { uploadedText = ''; }
+      try { uploadedText = await fileInput.files[0].text(); } catch(e) {}
     }
 
     const langNote = d.lang === 'en' ? 'اكتب العقد بالإنجليزية فقط.' :
-                     d.lang === 'both' ? 'اكتب العقد بالعربية في اليمين والإنجليزية في اليسار بتنسيق جدول أو عمودين متوازيين. استخدم HTML مع div class="bilingual" وداخله div class="ar" و div class="en".' :
+                     d.lang === 'both' ? 'اكتب العقد بتنسيق جدول ثنائي: العربي في العمود الأيمن والإنجليزي في العمود الأيسر. استخدم <table class="bilingual-table"><tr><td class="ar">...</td><td class="en">...</td></tr></table> لكل مادة. التوقيعات كذلك متقابلة.' :
                      'اكتب العقد بالعربية الفصحى فقط. اترك سطر فارغ بين كل مادة.';
 
     const prompt = `أنت محام سعودي محترف. اكتب عقداً قانونياً كاملاً ورسمياً.
@@ -268,20 +319,19 @@ ${langNote}
 - التاريخ: ${formatDate(d.date)}
 - القيمة: ${d.value} ريال سعودي
 
-الطرف الأول: ${d.p1.name} | هوية: ${d.p1.id || '-'} | جوال: ${d.p1.mobile || '-'} | ميلاد: ${formatDate(d.p1.dob) || '-'}
-الطرف الثاني: ${d.p2.name} | هوية: ${d.p2.id || '-'} | جوال: ${d.p2.mobile || '-'} | ميلاد: ${formatDate(d.p2.dob) || '-'}
+الطرف الأول: ${d.p1.name} | هوية: ${d.p1.id||'-'} | جوال: ${d.p1.mobile||'-'} | ميلاد: ${formatDate(d.p1.dob)||'-'}
+الطرف الثاني: ${d.p2.name} | هوية: ${d.p2.id||'-'} | جوال: ${d.p2.mobile||'-'} | ميلاد: ${formatDate(d.p2.dob)||'-'}
 
-ما يريده الطرف:
-${d.userRequest}
+ما يريده الطرف:\n${d.userRequest}
 
-${d.extraTerms ? 'شروط إضافية: ' + d.extraTerms : ''}
-${d.includeNDA ? 'أضف قسم اتفاقية سرية مناسب للموضوع.' : ''}
-${uploadedText ? '\n\nنص عقد مرفوع للاستفادة من بنوده:\n' + uploadedText.substring(0, 3000) : ''}
+${d.extraTerms ? 'شروط إضافية: '+d.extraTerms : ''}
+${d.includeNDA ? 'أضف قسم اتفاقية سرية مناسب.' : ''}
+${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substring(0,2500) : ''}
 
 المطلوب:
-- صياغة قانونية رسمية متكاملة (مدة، التزامات، مسؤولية، فسخ، نظام سعودي، توقيعات).
+- صياغة قانونية رسمية متكاملة.
 - ابدأ مباشرة بنص العقد.
-- استخدم HTML بسيط (<p> <strong> <h3> <br>). اترك سطر فارغ بين المواد.`;
+- استخدم HTML بسيط. اترك سطر فارغ بين المواد.`;
 
     try {
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -300,32 +350,23 @@ ${uploadedText ? '\n\nنص عقد مرفوع للاستفادة من بنوده:
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      let text = (data.choices?.[0]?.message?.content || '').replace(/```html|```/g, '').trim();
-      if (!text.includes('<')) text = '<p>' + text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
+      let text = (data.choices?.[0]?.message?.content || '').replace(/```html|```/g,'').trim();
+      if (!text.includes('<')) text = '<p>' + text.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>') + '</p>';
+
+      const logoData = localStorage.getItem('oqood_logo');
+      const logoHtml = logoData ? `<div class="text-center mb-2"><img src="${logoData}" style="max-height:60px;"></div>` : '';
 
       preview.innerHTML = `
+        ${logoHtml}
         <h2>${d.title}</h2>
         <div class="meta">${d.typeLabel} — ${formatDate(d.date)}</div>
-        <hr style="border:none;border-top:1px solid #e8e2d6;margin:14px 0;">
-        <div class="clause-box">
-          <span class="edit-icon no-print" title="تعديل"><i class="bi bi-pencil"></i></span>
-          ${text}
-        </div>
-        <div style="margin-top:36px;display:flex;justify-content:space-between;font-family:Tajawal;font-size:.92rem;">
-          <div style="width:45%;text-align:right;"><div style="border-top:1px solid #ccc;padding-top:6px;">توقيع الطرف الأول</div><div style="margin-top:4px;">${d.p1.name}</div></div>
-          <div style="width:45%;text-align:left;"><div style="border-top:1px solid #ccc;padding-top:6px;">توقيع الطرف الثاني</div><div style="margin-top:4px;">${d.p2.name}</div></div>
+        <hr style="border:none;border-top:1px solid #e8e2d6;margin:10px 0;">
+        <div class="clause-box">${text}</div>
+        <div class="sig-row">
+          <div class="sig-box" style="text-align:right;"><div class="sig-line">توقيع الطرف الأول</div><div>${d.p1.name}</div></div>
+          <div class="sig-box" style="text-align:left;"><div class="sig-line">توقيع الطرف الثاني</div><div>${d.p2.name}</div></div>
         </div>
       `;
-
-      preview.querySelectorAll('.edit-icon').forEach(icon => {
-        icon.onclick = (e) => {
-          e.stopPropagation();
-          const box = icon.closest('.clause-box');
-          const cur = box.innerText.replace(icon.innerText, '').trim();
-          const neu = prompt('عدّل النص:', cur);
-          if (neu !== null) box.innerHTML = icon.outerHTML + neu.replace(/\n/g, '<br>');
-        };
-      });
 
       formSection.style.display = 'none';
       previewSection.style.display = 'block';
@@ -356,38 +397,51 @@ ${uploadedText ? '\n\nنص عقد مرفوع للاستفادة من بنوده:
   });
   document.getElementById('printBtn').addEventListener('click', () => window.print());
 
+  document.getElementById('openEditor').onclick = () => {
+    document.getElementById('editorArea').innerHTML = preview.innerHTML;
+    document.getElementById('editorModal').classList.add('show');
+  };
+  document.getElementById('closeEditor').onclick = () => document.getElementById('editorModal').classList.remove('show');
+  document.getElementById('applyEdit').onclick = () => {
+    preview.innerHTML = document.getElementById('editorArea').innerHTML;
+    document.getElementById('editorModal').classList.remove('show');
+  };
+  document.getElementById('boldBtn').onclick = () => document.execCommand('bold');
+  document.getElementById('highlightBtn').onclick = () => document.execCommand('hiliteColor', false, '#fff3cd');
+  document.getElementById('fontSelect').onchange = function() {
+    document.getElementById('editorArea').style.fontFamily = this.value;
+  };
+  document.getElementById('sizeSelect').onchange = function() {
+    document.getElementById('editorArea').style.fontSize = this.value;
+  };
+
   document.getElementById('downloadBtn').addEventListener('click', async () => {
     if (!preview.innerText.trim()) { alert('صّغ العقد أولاً'); return; }
     const title = document.getElementById('contractTitle').value || 'عقد';
-    const safeName = title.replace(/[\\/:*?"<>|]/g, '').trim() || 'عقد';
-    document.querySelectorAll('.edit-icon').forEach(el => el.style.display = 'none');
-    const canvas = await html2canvas(document.querySelector('.contract-frame'), { scale: 1.4, useCORS: true, backgroundColor: '#ffffff' });
-    document.querySelectorAll('.edit-icon').forEach(el => el.style.display = '');
-    const img = canvas.toDataURL('image/jpeg', 0.75);
+    const safeName = title.replace(/[\\/:*?"<>|]/g,'').trim() || 'عقد';
+    const canvas = await html2canvas(document.querySelector('.contract-frame'), { scale: 1.5, useCORS: true, backgroundColor: '#ffffff' });
+    const img = canvas.toDataURL('image/jpeg', 0.72);
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = pageW - 12;
+    const imgW = pageW - 14;
     const imgH = (canvas.height * imgW) / canvas.width;
-    let yPos = 6;
-    if (imgH > pageH - 12) {
-      let remaining = imgH;
-      let srcY = 0;
-      const sliceRatio = (pageH - 12) / imgH;
+    if (imgH <= pageH - 14) {
+      pdf.addImage(img, 'JPEG', 7, 7, imgW, imgH);
+    } else {
+      let remaining = imgH, srcY = 0;
       while (remaining > 0) {
-        const sliceH = Math.min(pageH - 12, remaining);
+        const sliceH = Math.min(pageH - 14, remaining);
         const sliceCanvas = document.createElement('canvas');
         sliceCanvas.width = canvas.width;
         sliceCanvas.height = Math.max(1, (sliceH / imgH) * canvas.height);
         const ctx = sliceCanvas.getContext('2d');
         ctx.drawImage(canvas, 0, srcY, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
-        pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.75), 'JPEG', 6, yPos, imgW, sliceH);
+        pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.72), 'JPEG', 7, 7, imgW, sliceH);
         remaining -= sliceH;
         srcY += sliceCanvas.height;
-        if (remaining > 0) { pdf.addPage(); yPos = 6; }
+        if (remaining > 0) pdf.addPage();
       }
-    } else {
-      pdf.addImage(img, 'JPEG', 6, yPos, imgW, imgH);
     }
     pdf.save(safeName + '.pdf');
   });
@@ -406,9 +460,9 @@ ${uploadedText ? '\n\nنص عقد مرفوع للاستفادة من بنوده:
     const list = JSON.parse(localStorage.getItem('oqood_contracts') || '[]');
     const container = document.getElementById('contractsList');
     if (!list.length) { container.innerHTML = '<p class="text-muted text-center">لا توجد عقود محفوظة</p>'; return; }
-    container.innerHTML = list.map((c, i) => `
+    container.innerHTML = list.map((c,i) => `
       <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
-        <div><strong>${c.title || 'عقد'}</strong><div class="text-muted small">${c.p1?.name || ''} — ${c.p2?.name || ''}</div></div>
+        <div><strong>${c.title||'عقد'}</strong><div class="text-muted small">${c.p1?.name||''} — ${c.p2?.name||''}</div></div>
         <div>
           <button class="btn btn-sm btn-outline-primary me-1 view" data-i="${i}">عرض</button>
           <button class="btn btn-sm btn-outline-danger del" data-i="${i}">حذف</button>
@@ -421,12 +475,12 @@ ${uploadedText ? '\n\nنص عقد مرفوع للاستفادة من بنوده:
         preview.innerHTML = c.previewHtml;
         formSection.style.display = 'none';
         previewSection.style.display = 'block';
-        previewSection.scrollIntoView({ behavior: 'smooth' });
+        previewSection.scrollIntoView({behavior:'smooth'});
       }
     });
     container.querySelectorAll('.del').forEach(b => b.onclick = () => {
       if (confirm('حذف؟')) {
-        list.splice(b.dataset.i, 1);
+        list.splice(b.dataset.i,1);
         localStorage.setItem('oqood_contracts', JSON.stringify(list));
         loadList();
       }
