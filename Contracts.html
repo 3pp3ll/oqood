@@ -10,7 +10,7 @@
 <style>
 :root{--navy:#0f2744;--gold:#c9a84c;--ink:#1a2332;--muted:#5c6b7a;--line:#e2ddd4;}
 body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 0%,#f7f5f1 100%);color:var(--ink);min-height:100vh;padding:24px 0 60px;}
-.logo-box{background:#fff;border-radius:12px;padding:8px 12px;display:inline-flex;flex-direction:column;align-items:center;margin-left:12px;box-shadow:0 4px 12px rgba(0,0,0,.1);user-select:none;-webkit-user-select:none;-moz-user-select:none;pointer-events:auto;}
+.logo-box{background:#fff;border-radius:12px;padding:8px 12px;display:inline-flex;flex-direction:column;align-items:center;margin-left:12px;box-shadow:0 4px 12px rgba(0,0,0,.1);user-select:none;-webkit-user-select:none;}
 .logo-box *{user-select:none;-webkit-user-select:none;}
 .logo-box .circle{width:48px;height:48px;border:3px solid var(--navy);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Amiri',serif;font-size:26px;font-weight:700;color:var(--navy);box-shadow:0 0 0 3px var(--gold);}
 .logo-box .word{font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;color:var(--navy);margin-top:4px;}
@@ -36,12 +36,9 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
 .lang-group .btn{padding:5px 11px;font-size:.82rem;border-radius:8px;}
 .editor-toolbar{display:none;background:#f8f9fa;border:1px solid #e2ddd4;border-radius:10px;padding:8px 10px;margin-bottom:10px;gap:6px;flex-wrap:wrap;align-items:center;}
 .editor-toolbar.show{display:flex;}
-.modal-backdrop{position:fixed;inset:0;background:#d6dee8;z-index:9999;display:none;align-items:center;justify-content:center;opacity:1 !important;}
+.modal-backdrop{position:fixed;inset:0;background:#d6dee8;z-index:9999;display:none;align-items:center;justify-content:center;}
 .modal-backdrop.show{display:flex;}
-.modal-box{background:#ffffff !important;opacity:1 !important;border-radius:16px;padding:24px;width:min(460px,92vw);box-shadow:0 20px 50px rgba(15,39,68,.3);color:#1a2332;border:1px solid #b0b8c4;position:relative;}
-.modal-controls{position:absolute;top:10px;left:10px;display:flex;gap:6px;align-items:center;background:#fff;padding:4px;border-radius:8px;}
-.modal-controls input[type=color]{width:28px;height:28px;border:none;padding:0;border-radius:6px;cursor:pointer;}
-.modal-controls input[type=range]{width:70px;}
+.modal-box{background:#ffffff;border-radius:16px;padding:24px;width:min(440px,92vw);box-shadow:0 20px 50px rgba(15,39,68,.25);color:#1a2332;border:1px solid #b0b8c4;}
 .bilingual-table{width:100%;border-collapse:collapse;margin:8px 0;}
 .bilingual-table td{border:1px solid #eee;padding:10px 12px;vertical-align:top;width:50%;}
 .bilingual-table .ar{text-align:right;direction:rtl;}
@@ -69,18 +66,17 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
       </div>
     </div>
     <div class="d-flex align-items-center gap-2 no-print">
-      <button type="button" class="btn btn-sm btn-light" id="homeBtn" title="الرئيسية"><i class="bi bi-house"></i> <span class="t">الرئيسية</span></button>
+      <button type="button" class="btn btn-sm btn-light" id="homeBtn"><i class="bi bi-house"></i> <span id="lblHome">الرئيسية</span></button>
       <button type="button" class="btn btn-sm btn-light" id="topLangBtn" title="تغيير اللغة"><i class="bi bi-globe"></i></button>
-      <button type="button" class="btn btn-sm btn-light" id="settingsBtn" title="إعدادات الشعار"><i class="bi bi-gear"></i></button>
     </div>
   </div>
 
   <div class="form-section mb-4" id="formSection">
-    <div class="section-title"><i class="bi bi-people"></i> <span class="t">أطراف العقد</span></div>
+    <div class="section-title"><i class="bi bi-people"></i> <span id="lblParties">أطراف العقد</span></div>
     <div class="row g-3">
       <div class="col-md-6">
         <div class="party-card">
-          <h6><span class="t">الطرف الأول</span> <span class="req">*</span></h6>
+          <h6><span id="lblP1">الطرف الأول</span> <span class="req">*</span></h6>
           <input class="form-control mb-2" id="p1_name" placeholder="الاسم الكامل">
           <input class="form-control mb-2" id="p1_id" placeholder="رقم الهوية / الإقامة" maxlength="11">
           <input class="form-control mb-2" id="p1_mobile" placeholder="رقم الجوال">
@@ -89,7 +85,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
       </div>
       <div class="col-md-6">
         <div class="party-card">
-          <h6><span class="t">الطرف الثاني</span> <span class="req">*</span></h6>
+          <h6><span id="lblP2">الطرف الثاني</span> <span class="req">*</span></h6>
           <input class="form-control mb-2" id="p2_name" placeholder="الاسم الكامل">
           <input class="form-control mb-2" id="p2_id" placeholder="رقم الهوية / الإقامة" maxlength="11">
           <input class="form-control mb-2" id="p2_mobile" placeholder="رقم الجوال">
@@ -98,9 +94,9 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
       </div>
     </div>
 
-    <div class="section-title mt-3"><i class="bi bi-file-text"></i> <span class="t">تفاصيل العقد</span></div>
+    <div class="section-title mt-3"><i class="bi bi-file-text"></i> <span id="lblDetails">تفاصيل العقد</span></div>
     <div class="row g-3">
-      <div class="col-md-6"><label class="form-label t">نوع العقد</label>
+      <div class="col-md-6"><label class="form-label" id="lblType">نوع العقد</label>
         <select class="form-select" id="contractType">
           <option value="service">عقد خدمات / استشارة</option>
           <option value="sale">عقد بيع</option>
@@ -109,22 +105,26 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
           <option value="general">اتفاق عام</option>
           <option value="nda">اتفاقية سرية (مستقلة)</option>
         </select></div>
-      <div class="col-md-6"><label class="form-label"><span class="t">عنوان العقد</span> <span class="req">*</span></label>
+      <div class="col-md-6"><label class="form-label"><span id="lblTitle">عنوان العقد</span> <span class="req">*</span></label>
         <input class="form-control" id="contractTitle" placeholder="مثال: تقديم استشارة تقنية"></div>
-      <div class="col-md-6"><label class="form-label t">التاريخ</label><input type="date" class="form-control" id="contractDate"></div>
-      <div class="col-md-6"><label class="form-label t">القيمة (ريال)</label><input type="number" class="form-control" id="contractValue"></div>
+      <div class="col-md-6"><label class="form-label" id="lblDate">التاريخ</label><input type="date" class="form-control" id="contractDate"></div>
+      <div class="col-md-6"><label class="form-label" id="lblValue">القيمة (ريال)</label><input type="number" class="form-control" id="contractValue"></div>
     </div>
-    <div class="mt-3"><label class="form-label"><span class="t">ما تريده في العقد</span> <span class="req">*</span></label>
+    <div class="mt-3"><label class="form-label"><span id="lblRequest">ما تريده في العقد</span> <span class="req">*</span></label>
       <textarea class="form-control" id="userRequest" rows="4" placeholder="اكتب بلغتك العادية..."></textarea></div>
-    <div class="mt-3"><label class="form-label t">شروط إضافية (اختياري)</label>
+    <div class="mt-3"><label class="form-label" id="lblExtra">شروط إضافية (اختياري)</label>
       <textarea class="form-control" id="extraTerms" rows="2"></textarea></div>
     <div class="form-check mt-3">
       <input class="form-check-input" type="checkbox" id="includeNDA" checked>
-      <label class="form-check-label t" for="includeNDA">إضافة بنود اتفاقية السرية</label>
+      <label class="form-check-label" id="lblNDA" for="includeNDA">إضافة بنود اتفاقية السرية</label>
     </div>
     <div class="mt-3">
-      <label class="form-label t">رفع عقد للاستفادة من بنوده (اختياري)</label>
+      <label class="form-label" id="lblUpload">رفع عقد للاستفادة من بنوده (اختياري)</label>
       <input type="file" class="form-control" id="uploadContract" accept=".txt,.pdf,.html">
+    </div>
+    <div class="mt-3">
+      <label class="form-label" id="lblLogo">شعار العقد (اختياري) — يظهر ككليشة علوية</label>
+      <input type="file" class="form-control" id="logoUpload" accept="image/*">
     </div>
 
     <div class="actions mt-4">
@@ -133,15 +133,15 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
         <button type="button" class="btn btn-outline-primary" data-lang="en">English</button>
         <button type="button" class="btn btn-outline-primary" data-lang="both">لغتين</button>
       </div>
-      <button type="button" id="aiGenerateBtn" class="btn btn-primary"><i class="bi bi-stars"></i> <span class="t">صياغة قانونية</span></button>
-      <button type="button" id="clearBtn" class="btn btn-outline-secondary t">مسح</button>
+      <button type="button" id="aiGenerateBtn" class="btn btn-primary"><i class="bi bi-stars"></i> <span id="lblGenerate">صياغة قانونية</span></button>
+      <button type="button" id="clearBtn" class="btn btn-outline-secondary" id="lblClear">مسح</button>
     </div>
   </div>
 
   <div class="preview-section" id="previewSection" style="display:none;">
     <div class="section-title d-flex justify-content-between align-items-center">
-      <span><i class="bi bi-file-earmark-text"></i> <span class="t">معاينة العقد</span></span>
-      <button type="button" class="btn btn-sm btn-outline-primary no-print" id="toggleEdit"><i class="bi bi-pencil"></i> <span class="t">تعديل النص</span></button>
+      <span><i class="bi bi-file-earmark-text"></i> <span id="lblPreview">معاينة العقد</span></span>
+      <button type="button" class="btn btn-sm btn-outline-primary no-print" id="toggleEdit"><i class="bi bi-pencil"></i> <span id="lblEdit">تعديل النص</span></button>
     </div>
 
     <div class="editor-toolbar no-print" id="editorToolbar">
@@ -160,56 +160,35 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
       <button type="button" class="btn btn-sm btn-outline-warning" id="highlightBtn">تظليل</button>
       <button type="button" class="btn btn-sm btn-success" id="finishEdit">انتهيت التعديل</button>
     </div>
-    <p class="small text-muted no-print mb-2 t">لتعديلات أكثر صدّر لوورد ثم احفظه PDF كنص.</p>
+    <p class="small text-muted no-print mb-2" id="lblNote">لتعديلات أكثر صدّر لوورد ثم احفظه PDF كنص.</p>
 
     <div class="contract-frame">
       <div class="contract-paper" id="contractPreview" contenteditable="false"></div>
     </div>
     <div class="actions">
-      <button type="button" id="printBtn" class="btn btn-outline-primary"><i class="bi bi-printer"></i> <span class="t">طباعة</span></button>
+      <button type="button" id="printBtn" class="btn btn-outline-primary"><i class="bi bi-printer"></i> <span id="lblPrint">طباعة</span></button>
       <button type="button" id="downloadBtn" class="btn btn-outline-success"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
-      <button type="button" id="wordBtn" class="btn btn-outline-primary"><i class="bi bi-file-earmark-word"></i> <span class="t">وورد</span></button>
-      <button type="button" id="saveLocalBtn" class="btn btn-outline-secondary"><i class="bi bi-save"></i> <span class="t">حفظ محلي</span></button>
-      <button type="button" id="backToForm" class="btn btn-outline-secondary t">رجوع للتعديل</button>
-      <button type="button" id="homeBtn2" class="btn btn-outline-secondary ms-auto"><i class="bi bi-house"></i> <span class="t">الرئيسية</span></button>
+      <button type="button" id="wordBtn" class="btn btn-outline-primary"><i class="bi bi-file-earmark-word"></i> <span id="lblWord">وورد</span></button>
+      <button type="button" id="saveLocalBtn" class="btn btn-outline-secondary"><i class="bi bi-save"></i> <span id="lblSave">حفظ محلي</span></button>
+      <button type="button" id="backToForm" class="btn btn-outline-secondary"><span id="lblBack">رجوع للتعديل</span></button>
+      <button type="button" id="homeBtn2" class="btn btn-outline-secondary ms-auto"><i class="bi bi-house"></i> <span id="lblHome2">الرئيسية</span></button>
     </div>
   </div>
 
   <div class="form-section mt-4 no-print">
-    <div class="section-title"><i class="bi bi-folder2-open"></i> <span class="t">العقود المحفوظة محلياً</span></div>
+    <div class="section-title"><i class="bi bi-folder2-open"></i> <span id="lblSaved">العقود المحفوظة محلياً</span></div>
     <div id="contractsList"></div>
   </div>
 </div>
 
 <div class="modal-backdrop" id="keyModal">
-  <div class="modal-box" id="keyBox">
-    <div class="modal-controls no-print">
-      <input type="color" id="keyBgColor" value="#ffffff" title="لون الخلفية">
-      <input type="range" id="keyOpacity" min="0.85" max="1" step="0.01" value="1" title="الشفافية">
-    </div>
+  <div class="modal-box">
     <h5 class="mb-3" style="font-family:Amiri;color:#0f2744;">مفتاح OpenRouter</h5>
     <p class="small mb-3" style="color:#333;">يُحفظ في متصفحك فقط. لا يُرسل لأي سيرفر.</p>
     <input type="password" class="form-control mb-3" id="apiKeyInput" placeholder="sk-or-v1-...">
     <div class="d-flex gap-2">
       <button type="button" class="btn btn-primary" id="saveKeyBtn">حفظ</button>
       <button type="button" class="btn btn-outline-secondary" id="closeKeyBtn">إغلاق</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="settingsModal">
-  <div class="modal-box" id="settingsBox">
-    <div class="modal-controls no-print">
-      <input type="color" id="setBgColor" value="#ffffff" title="لون الخلفية">
-      <input type="range" id="setOpacity" min="0.85" max="1" step="0.01" value="1" title="الشفافية">
-    </div>
-    <h5 class="mb-3" style="font-family:Amiri;color:#0f2744;">إعدادات الشعار</h5>
-    <p class="small mb-3" style="color:#444;">ارفع شعارك (يظهر في أعلى العقد ككليشة). مفتاح OpenRouter منفصل.</p>
-    <input type="file" class="form-control mb-3" id="logoUpload" accept="image/*">
-    <div id="logoPreview" class="mb-3 text-center"></div>
-    <div class="d-flex gap-2">
-      <button type="button" class="btn btn-primary" id="saveSettings">حفظ</button>
-      <button type="button" class="btn btn-outline-secondary" id="closeSettings">إغلاق</button>
     </div>
   </div>
 </div>
@@ -224,96 +203,61 @@ document.addEventListener('DOMContentLoaded', function() {
   const toolbar = document.getElementById('editorToolbar');
   let clickCount = 0, clickTimer = null, currentLang = 'ar', isEditing = false, uiLang = 'ar';
 
-  const translations = {
+  const T = {
     ar: {
-      appTitle: 'عقود',
-      appSubtitle: 'صياغة قانونية فاخرة',
-      home: 'الرئيسية',
-      parties: 'أطراف العقد',
-      party1: 'الطرف الأول',
-      party2: 'الطرف الثاني',
-      details: 'تفاصيل العقد',
-      type: 'نوع العقد',
-      title: 'عنوان العقد',
-      date: 'التاريخ',
-      value: 'القيمة (ريال)',
-      request: 'ما تريده في العقد',
-      extra: 'شروط إضافية (اختياري)',
-      nda: 'إضافة بنود اتفاقية السرية',
-      upload: 'رفع عقد للاستفادة من بنوده (اختياري)',
-      generate: 'صياغة قانونية',
-      clear: 'مسح',
-      preview: 'معاينة العقد',
-      edit: 'تعديل النص',
-      print: 'طباعة',
-      word: 'وورد',
-      save: 'حفظ محلي',
-      back: 'رجوع للتعديل',
-      saved: 'العقود المحفوظة محلياً',
-      note: 'لتعديلات أكثر صدّر لوورد ثم احفظه PDF كنص.'
+      home:'الرئيسية', parties:'أطراف العقد', p1:'الطرف الأول', p2:'الطرف الثاني',
+      details:'تفاصيل العقد', type:'نوع العقد', title:'عنوان العقد', date:'التاريخ', value:'القيمة (ريال)',
+      request:'ما تريده في العقد', extra:'شروط إضافية (اختياري)', nda:'إضافة بنود اتفاقية السرية',
+      upload:'رفع عقد للاستفادة من بنوده (اختياري)', logo:'شعار العقد (اختياري) — يظهر ككليشة علوية',
+      generate:'صياغة قانونية', clear:'مسح', preview:'معاينة العقد', edit:'تعديل النص',
+      print:'طباعة', word:'وورد', save:'حفظ محلي', back:'رجوع للتعديل', saved:'العقود المحفوظة محلياً',
+      note:'لتعديلات أكثر صدّر لوورد ثم احفظه PDF كنص.',
+      phName:'الاسم الكامل', phId:'رقم الهوية / الإقامة', phMobile:'رقم الجوال',
+      phTitle:'مثال: تقديم استشارة تقنية', phRequest:'اكتب بلغتك العادية...'
     },
     en: {
-      appTitle: 'Oqood',
-      appSubtitle: 'Premium Legal Drafting',
-      home: 'Home',
-      parties: 'Contract Parties',
-      party1: 'Party One',
-      party2: 'Party Two',
-      details: 'Contract Details',
-      type: 'Contract Type',
-      title: 'Contract Title',
-      date: 'Date',
-      value: 'Value (SAR)',
-      request: 'What you want in the contract',
-      extra: 'Additional Terms (optional)',
-      nda: 'Add confidentiality clauses',
-      upload: 'Upload contract to use its clauses (optional)',
-      generate: 'Generate Legal Draft',
-      clear: 'Clear',
-      preview: 'Contract Preview',
-      edit: 'Edit Text',
-      print: 'Print',
-      word: 'Word',
-      save: 'Save Local',
-      back: 'Back to Edit',
-      saved: 'Locally Saved Contracts',
-      note: 'For more edits, export to Word then save as text PDF.'
+      home:'Home', parties:'Contract Parties', p1:'Party One', p2:'Party Two',
+      details:'Contract Details', type:'Contract Type', title:'Contract Title', date:'Date', value:'Value (SAR)',
+      request:'What you want in the contract', extra:'Additional Terms (optional)', nda:'Add confidentiality clauses',
+      upload:'Upload contract to use its clauses (optional)', logo:'Contract Logo (optional) — appears as header',
+      generate:'Generate Legal Draft', clear:'Clear', preview:'Contract Preview', edit:'Edit Text',
+      print:'Print', word:'Word', save:'Save Local', back:'Back to Edit', saved:'Locally Saved Contracts',
+      note:'For more edits, export to Word then save as text PDF.',
+      phName:'Full Name', phId:'ID / Iqama Number', phMobile:'Mobile Number',
+      phTitle:'Example: Technical Consultation', phRequest:'Write in your own words...'
     }
   };
 
-  function applyUILang(lang) {
+  function setLang(lang) {
     uiLang = lang;
-    const t = translations[lang];
+    const t = T[lang];
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
-    document.getElementById('appTitle').textContent = t.appTitle;
-    document.getElementById('appSubtitle').textContent = t.appSubtitle;
-    document.querySelectorAll('.t').forEach(el => {
-      const key = el.dataset.key;
-      if (key && t[key]) el.textContent = t[key];
-    });
-    // fallback simple replacements for elements without data-key
+    document.body.style.direction = lang === 'en' ? 'ltr' : 'rtl';
+    document.getElementById('appTitle').textContent = lang === 'en' ? 'Oqood' : 'عقود';
+    document.getElementById('appSubtitle').textContent = lang === 'en' ? 'Premium Legal Drafting' : 'صياغة قانونية فاخرة';
     const map = {
-      'الرئيسية': t.home, 'أطراف العقد': t.parties, 'الطرف الأول': t.party1,
-      'الطرف الثاني': t.party2, 'تفاصيل العقد': t.details, 'نوع العقد': t.type,
-      'عنوان العقد': t.title, 'التاريخ': t.date, 'القيمة (ريال)': t.value,
-      'ما تريده في العقد': t.request, 'شروط إضافية (اختياري)': t.extra,
-      'إضافة بنود اتفاقية السرية': t.nda, 'رفع عقد للاستفادة من بنوده (اختياري)': t.upload,
-      'صياغة قانونية': t.generate, 'مسح': t.clear, 'معاينة العقد': t.preview,
-      'تعديل النص': t.edit, 'طباعة': t.print, 'وورد': t.word, 'حفظ محلي': t.save,
-      'رجوع للتعديل': t.back, 'العقود المحفوظة محلياً': t.saved,
-      'لتعديلات أكثر صدّر لوورد ثم احفظه PDF كنص.': t.note
+      lblHome:t.home, lblHome2:t.home, lblParties:t.parties, lblP1:t.p1, lblP2:t.p2,
+      lblDetails:t.details, lblType:t.type, lblTitle:t.title, lblDate:t.date, lblValue:t.value,
+      lblRequest:t.request, lblExtra:t.extra, lblNDA:t.nda, lblUpload:t.upload, lblLogo:t.logo,
+      lblGenerate:t.generate, lblClear:t.clear, lblPreview:t.preview, lblEdit:t.edit,
+      lblPrint:t.print, lblWord:t.word, lblSave:t.save, lblBack:t.back, lblSaved:t.saved, lblNote:t.note
     };
-    document.querySelectorAll('.t').forEach(el => {
-      const txt = el.textContent.trim();
-      if (map[txt]) el.textContent = map[txt];
+    Object.keys(map).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = map[id];
     });
+    document.getElementById('p1_name').placeholder = t.phName;
+    document.getElementById('p2_name').placeholder = t.phName;
+    document.getElementById('p1_id').placeholder = t.phId;
+    document.getElementById('p2_id').placeholder = t.phId;
+    document.getElementById('p1_mobile').placeholder = t.phMobile;
+    document.getElementById('p2_mobile').placeholder = t.phMobile;
+    document.getElementById('contractTitle').placeholder = t.phTitle;
+    document.getElementById('userRequest').placeholder = t.phRequest;
   }
 
-  document.getElementById('topLangBtn').onclick = () => {
-    const next = uiLang === 'ar' ? 'en' : 'ar';
-    applyUILang(next);
-  };
+  document.getElementById('topLangBtn').onclick = () => setLang(uiLang === 'ar' ? 'en' : 'ar');
 
   function goHome() {
     previewSection.style.display = 'none';
@@ -334,8 +278,6 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('keyModal').classList.add('show');
     }
   });
-
-  // منع التحديد على الشعار
   logo.addEventListener('mousedown', e => e.preventDefault());
   logo.addEventListener('selectstart', e => e.preventDefault());
 
@@ -344,26 +286,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('keyModal').classList.remove('show');
   };
   document.getElementById('closeKeyBtn').onclick = () => document.getElementById('keyModal').classList.remove('show');
-
-  document.getElementById('settingsBtn').onclick = () => document.getElementById('settingsModal').classList.add('show');
-  document.getElementById('closeSettings').onclick = () => document.getElementById('settingsModal').classList.remove('show');
-  document.getElementById('saveSettings').onclick = () => {
-    const f = document.getElementById('logoUpload').files[0];
-    if (f) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        localStorage.setItem('oqood_logo', e.target.result);
-        document.getElementById('logoPreview').innerHTML = '<img src="'+e.target.result+'" style="max-height:80px;">';
-      };
-      reader.readAsDataURL(f);
-    }
-    document.getElementById('settingsModal').classList.remove('show');
-  };
-
-  document.getElementById('keyBgColor').oninput = function() { document.getElementById('keyBox').style.background = this.value; };
-  document.getElementById('keyOpacity').oninput = function() { document.getElementById('keyBox').style.opacity = this.value; };
-  document.getElementById('setBgColor').oninput = function() { document.getElementById('settingsBox').style.background = this.value; };
-  document.getElementById('setOpacity').oninput = function() { document.getElementById('settingsBox').style.opacity = this.value; };
 
   document.getElementById('contractDate').valueAsDate = new Date();
 
@@ -380,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
     preview.contentEditable = isEditing;
     preview.classList.toggle('editing', isEditing);
     toolbar.classList.toggle('show', isEditing);
-    document.getElementById('toggleEdit').innerHTML = isEditing ? '<i class="bi bi-check2"></i> منتهي' : '<i class="bi bi-pencil"></i> <span class="t">تعديل النص</span>';
+    document.getElementById('lblEdit').textContent = isEditing ? 'منتهي' : (uiLang==='en'?'Edit Text':'تعديل النص');
     if (isEditing) preview.focus();
   };
   document.getElementById('finishEdit').onclick = () => {
@@ -388,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
     preview.contentEditable = false;
     preview.classList.remove('editing');
     toolbar.classList.remove('show');
-    document.getElementById('toggleEdit').innerHTML = '<i class="bi bi-pencil"></i> <span class="t">تعديل النص</span>';
+    document.getElementById('lblEdit').textContent = uiLang==='en'?'Edit Text':'تعديل النص';
   };
 
   document.getElementById('boldBtn').onclick = () => document.execCommand('bold');
@@ -449,7 +371,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const langNote = d.lang === 'en' ? 'اكتب العقد بالإنجليزية فقط.' :
-                     d.lang === 'both' ? 'اكتب العقد بتنسيق جدول ثنائي: العربي في العمود الأيمن والإنجليزي في العمود الأيسر. استخدم <table class="bilingual-table"><tr><td class="ar">...</td><td class="en">...</td></tr></table> لكل مادة. التوقيعات متقابلة.' :
+                     d.lang === 'both' ? 'اكتب العقد بتنسيق جدول ثنائي: العربي في العمود الأيمن والإنألجليزي في العمود الأيسر. استخدم <table class="bilingual-table"><tr><td class="ar">...</td><td class="en">...</td></tr></table> لكل مادة. التوقيعات متقابلة.' :
                      'اكتب العقد بالعربية الفصحى فقط. اترك سطر فارغ بين كل مادة.';
 
     const prompt = `أنت محام سعودي محترف. اكتب عقداً قانونياً كاملاً ورسمياً.
@@ -495,8 +417,15 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
       let text = (data.choices?.[0]?.message?.content || '').replace(/```html|```/g,'').trim();
       if (!text.includes('<')) text = '<p>' + text.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>') + '</p>';
 
-      const logoData = localStorage.getItem('oqood_logo');
-      const logoHtml = logoData ? `<div class="text-center mb-2"><img src="${logoData}" style="max-height:55px;"></div>` : '';
+      let logoHtml = '';
+      const logoFile = document.getElementById('logoUpload').files[0];
+      if (logoFile) {
+        const reader = new FileReader();
+        logoHtml = await new Promise(resolve => {
+          reader.onload = e => resolve(`<div class="text-center mb-2"><img src="${e.target.result}" style="max-height:55px;"></div>`);
+          reader.readAsDataURL(logoFile);
+        });
+      }
 
       preview.innerHTML = `
         ${logoHtml}
@@ -540,10 +469,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
     if (!preview.innerText.trim()) { alert('صّغ العقد أولاً'); return; }
     const title = document.getElementById('contractTitle').value || 'عقد';
     const safeName = title.replace(/[\\/:*?"<>|]/g,'').trim() || 'عقد';
-    const logoData = localStorage.getItem('oqood_logo') || '';
-    const logoImg = logoData ? `<div style="text-align:center;margin-bottom:12px;"><img src="${logoData}" style="max-height:60px;"></div>` : '';
     const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>${safeName}</title></head><body style="font-family:Amiri,serif;padding:30px;">
-      ${logoImg}
       <div style="text-align:center;font-family:Cairo,sans-serif;font-size:11px;color:#666;margin-bottom:20px;">منصة عقود — كليشة علوية</div>
       ${preview.innerHTML}
       <div style="text-align:center;font-size:10px;color:#999;margin-top:40px;border-top:1px solid #ddd;padding-top:10px;">منصة عقود — كليشة سفلية | هذا العقد باجتهاد شخصي وليس من مكتب محاماة</div>
