@@ -10,11 +10,12 @@
 <style>
 :root{--navy:#0f2744;--gold:#c9a84c;--ink:#1a2332;--muted:#5c6b7a;--line:#e2ddd4;}
 body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 0%,#f7f5f1 100%);color:var(--ink);min-height:100vh;padding:24px 0 60px;}
-.brand-mark{width:56px;height:56px;background:#fff;border:3px solid var(--navy);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'Amiri',serif;font-size:28px;font-weight:700;color:var(--navy);box-shadow:0 0 0 4px var(--gold);margin-left:10px;cursor:pointer;user-select:none;position:relative;}
-.brand-mark::after{content:'عقود';position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:11px;font-family:'Cairo',sans-serif;color:var(--navy);white-space:nowrap;font-weight:700;}
-.header{background:linear-gradient(135deg,var(--navy) 0%,#1e4a78 50%,#2a5f9e 100%);color:#fff;padding:26px 22px 22px;border-radius:22px;margin-bottom:22px;box-shadow:0 12px 32px rgba(15,39,68,.16);}
-.header h1{font-family:'Amiri',serif;font-weight:700;font-size:2.2rem;margin:0;}
-.header .lead{opacity:.9;font-size:.95rem;margin-top:2px;}
+.logo-box{background:#fff;border-radius:12px;padding:8px 12px;display:inline-flex;flex-direction:column;align-items:center;margin-left:12px;box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.logo-box .circle{width:48px;height:48px;border:3px solid var(--navy);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Amiri',serif;font-size:26px;font-weight:700;color:var(--navy);box-shadow:0 0 0 3px var(--gold);}
+.logo-box .word{font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;color:var(--navy);margin-top:4px;}
+.header{background:linear-gradient(135deg,var(--navy) 0%,#1e4a78 50%,#2a5f9e 100%);color:#fff;padding:20px 22px;border-radius:22px;margin-bottom:22px;box-shadow:0 12px 32px rgba(15,39,68,.16);}
+.header h1{font-family:'Amiri',serif;font-weight:700;font-size:2.1rem;margin:0;}
+.header .lead{opacity:.9;font-size:.92rem;margin-top:2px;}
 .form-section,.preview-section{background:#fff;padding:22px;border-radius:18px;box-shadow:0 8px 24px rgba(15,39,68,.05);border:1px solid rgba(226,221,212,.6);}
 .section-title{font-family:'Amiri',serif;font-size:1.3rem;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .req{color:#e74c3c;font-weight:700;}
@@ -36,7 +37,10 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
 .editor-toolbar.show{display:flex;}
 .modal-backdrop{position:fixed;inset:0;background:#e8eef4;z-index:3000;display:none;align-items:center;justify-content:center;}
 .modal-backdrop.show{display:flex;}
-.modal-box{background:#ffffff;border-radius:16px;padding:28px;width:min(440px,92vw);box-shadow:0 20px 50px rgba(15,39,68,.25);color:#1a2332;border:1px solid #c5ced8;}
+.modal-box{background:#ffffff;border-radius:16px;padding:24px;width:min(460px,92vw);box-shadow:0 20px 50px rgba(15,39,68,.25);color:#1a2332;border:1px solid #c5ced8;position:relative;}
+.modal-controls{position:absolute;top:10px;left:10px;display:flex;gap:6px;align-items:center;}
+.modal-controls input[type=color]{width:28px;height:28px;border:none;padding:0;border-radius:6px;cursor:pointer;}
+.modal-controls input[type=range]{width:70px;}
 .bilingual-table{width:100%;border-collapse:collapse;margin:8px 0;}
 .bilingual-table td{border:1px solid #eee;padding:10px 12px;vertical-align:top;width:50%;}
 .bilingual-table .ar{text-align:right;direction:rtl;}
@@ -44,6 +48,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
 .sig-row{display:flex;justify-content:space-between;margin-top:28px;font-family:'Tajawal',sans-serif;font-size:.9rem;}
 .sig-box{width:46%;}
 .sig-line{border-top:1px solid #ccc;padding-top:6px;margin-top:4px;}
+.disclaimer{font-size:.78rem;color:#888;text-align:center;margin-top:20px;font-family:'Tajawal',sans-serif;}
 @media print{.no-print,.editor-toolbar{display:none!important;}.contract-frame{border:5px solid #000;}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -52,14 +57,18 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
 <body>
 <div class="container" style="max-width:1080px;">
   <div class="header d-flex align-items-center justify-content-between flex-wrap gap-2">
-    <div class="d-flex align-items-center" style="padding-bottom:8px;">
-      <div class="brand-mark" id="logoMark" title="5 ضغطات لمفتاح OpenRouter">ع</div>
+    <div class="d-flex align-items-center">
+      <div class="logo-box" id="logoMark" title="5 ضغطات لمفتاح OpenRouter">
+        <div class="circle">ع</div>
+        <div class="word">عقود</div>
+      </div>
       <div>
         <h1>عقود</h1>
         <p class="lead mb-0">صياغة قانونية فاخرة</p>
       </div>
     </div>
     <div class="d-flex align-items-center gap-2 no-print">
+      <button type="button" class="btn btn-sm btn-light" id="homeBtn" title="الرئيسية"><i class="bi bi-house"></i> الرئيسية</button>
       <button type="button" class="btn btn-sm btn-light" id="topLangBtn" title="تغيير اللغة"><i class="bi bi-translate"></i></button>
       <button type="button" class="btn btn-sm btn-light" id="settingsBtn" title="إعدادات الشعار"><i class="bi bi-gear"></i></button>
     </div>
@@ -146,18 +155,22 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
         <option value="1.15rem">كبير</option>
       </select>
       <button type="button" class="btn btn-sm btn-outline-secondary" id="boldBtn"><b>B</b></button>
+      <label class="d-flex align-items-center gap-1 small">تظليل <input type="color" id="highlightColor" value="#fff3cd" style="width:32px;height:28px;border:none;padding:0;"></label>
       <button type="button" class="btn btn-sm btn-outline-warning" id="highlightBtn">تظليل</button>
       <button type="button" class="btn btn-sm btn-success" id="finishEdit">انتهيت التعديل</button>
     </div>
+    <p class="small text-muted no-print mb-2">لتعديلات أكثر (أقواس، تنسيق دقيق) صدّر لوورد ثم احفظه PDF كنص.</p>
 
     <div class="contract-frame">
       <div class="contract-paper" id="contractPreview" contenteditable="false"></div>
     </div>
     <div class="actions">
       <button type="button" id="printBtn" class="btn btn-outline-primary"><i class="bi bi-printer"></i> طباعة</button>
-      <button type="button" id="downloadBtn" class="btn btn-outline-success"><i class="bi bi-file-earmark-pdf"></i> تحميل PDF</button>
+      <button type="button" id="downloadBtn" class="btn btn-outline-success"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+      <button type="button" id="wordBtn" class="btn btn-outline-primary"><i class="bi bi-file-earmark-word"></i> وورد</button>
       <button type="button" id="saveLocalBtn" class="btn btn-outline-secondary"><i class="bi bi-save"></i> حفظ محلي</button>
-      <button type="button" id="backToForm" class="btn btn-outline-secondary ms-auto">رجوع للتعديل</button>
+      <button type="button" id="backToForm" class="btn btn-outline-secondary">رجوع للتعديل</button>
+      <button type="button" id="homeBtn2" class="btn btn-outline-secondary ms-auto"><i class="bi bi-house"></i> الرئيسية</button>
     </div>
   </div>
 
@@ -167,9 +180,12 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
   </div>
 </div>
 
-<!-- نافذة المفتاح — خلفية صلبة غير شفافة -->
 <div class="modal-backdrop" id="keyModal">
-  <div class="modal-box">
+  <div class="modal-box" id="keyBox">
+    <div class="modal-controls no-print">
+      <input type="color" id="keyBgColor" value="#ffffff" title="لون الخلفية">
+      <input type="range" id="keyOpacity" min="0.5" max="1" step="0.05" value="1" title="الشفافية">
+    </div>
     <h5 class="mb-3" style="font-family:Amiri;color:#0f2744;">مفتاح OpenRouter</h5>
     <p class="small mb-3" style="color:#333;">يُحفظ في متصفحك فقط. لا يُرسل لأي سيرفر.</p>
     <input type="password" class="form-control mb-3" id="apiKeyInput" placeholder="sk-or-v1-...">
@@ -180,11 +196,14 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
   </div>
 </div>
 
-<!-- نافذة الإعدادات — خلفية صلبة غير شفافة -->
 <div class="modal-backdrop" id="settingsModal">
-  <div class="modal-box">
+  <div class="modal-box" id="settingsBox">
+    <div class="modal-controls no-print">
+      <input type="color" id="setBgColor" value="#ffffff" title="لون الخلفية">
+      <input type="range" id="setOpacity" min="0.5" max="1" step="0.05" value="1" title="الشفافية">
+    </div>
     <h5 class="mb-3" style="font-family:Amiri;color:#0f2744;">إعدادات الشعار</h5>
-    <p class="small mb-3" style="color:#444;">ارفع شعارك (يظهر في أعلى العقد). مفتاح OpenRouter منفصل ويُفتح بالضغط 5 مرات على الشعار.</p>
+    <p class="small mb-3" style="color:#444;">ارفع شعارك (يظهر في أعلى العقد ككليشة). مفتاح OpenRouter منفصل.</p>
     <input type="file" class="form-control mb-3" id="logoUpload" accept="image/*">
     <div id="logoPreview" class="mb-3 text-center"></div>
     <div class="d-flex gap-2">
@@ -203,6 +222,15 @@ document.addEventListener('DOMContentLoaded', function() {
   const logo = document.getElementById('logoMark');
   const toolbar = document.getElementById('editorToolbar');
   let clickCount = 0, clickTimer = null, currentLang = 'ar', isEditing = false;
+
+  function goHome() {
+    previewSection.style.display = 'none';
+    formSection.style.display = 'block';
+    formSection.scrollIntoView({ behavior: 'smooth' });
+    if (isEditing) document.getElementById('finishEdit').click();
+  }
+  document.getElementById('homeBtn').onclick = goHome;
+  document.getElementById('homeBtn2').onclick = goHome;
 
   logo.addEventListener('click', () => {
     clickCount++;
@@ -236,6 +264,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('settingsModal').classList.remove('show');
   };
 
+  // تحكم الشفافية واللون داخل النوافذ
+  document.getElementById('keyBgColor').oninput = function() { document.getElementById('keyBox').style.background = this.value; };
+  document.getElementById('keyOpacity').oninput = function() { document.getElementById('keyBox').style.opacity = this.value; };
+  document.getElementById('setBgColor').oninput = function() { document.getElementById('settingsBox').style.background = this.value; };
+  document.getElementById('setOpacity').oninput = function() { document.getElementById('settingsBox').style.opacity = this.value; };
+
   document.getElementById('topLangBtn').onclick = () => {
     const langs = ['ar','en','both'];
     currentLang = langs[(langs.indexOf(currentLang)+1)%3];
@@ -252,7 +286,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // تعديل على نفس الشاشة
   document.getElementById('toggleEdit').onclick = () => {
     isEditing = !isEditing;
     preview.contentEditable = isEditing;
@@ -270,7 +303,10 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   document.getElementById('boldBtn').onclick = () => document.execCommand('bold');
-  document.getElementById('highlightBtn').onclick = () => document.execCommand('hiliteColor', false, '#fff3cd');
+  document.getElementById('highlightBtn').onclick = () => {
+    const c = document.getElementById('highlightColor').value;
+    document.execCommand('hiliteColor', false, c);
+  };
   document.getElementById('fontSelect').onchange = function() { preview.style.fontFamily = this.value; };
   document.getElementById('sizeSelect').onchange = function() { preview.style.fontSize = this.value; };
 
@@ -371,7 +407,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
       if (!text.includes('<')) text = '<p>' + text.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>') + '</p>';
 
       const logoData = localStorage.getItem('oqood_logo');
-      const logoHtml = logoData ? `<div class="text-center mb-2"><img src="${logoData}" style="max-height:60px;"></div>` : '';
+      const logoHtml = logoData ? `<div class="text-center mb-2"><img src="${logoData}" style="max-height:55px;"></div>` : '';
 
       preview.innerHTML = `
         ${logoHtml}
@@ -383,6 +419,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
           <div class="sig-box" style="text-align:right;"><div class="sig-line">توقيع الطرف الأول</div><div>${d.p1.name}</div></div>
           <div class="sig-box" style="text-align:left;"><div class="sig-line">توقيع الطرف الثاني</div><div>${d.p2.name}</div></div>
         </div>
+        <div class="disclaimer">هذا العقد تم إعداده باجتهاد شخصي وليس صادراً من مكتب محاماة. يُنصح بمراجعته من مختص قبل التوقيع.</div>
       `;
 
       formSection.style.display = 'none';
@@ -398,12 +435,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
   }
 
   document.getElementById('aiGenerateBtn').addEventListener('click', generateWithAI);
-  document.getElementById('backToForm').addEventListener('click', () => {
-    previewSection.style.display = 'none';
-    formSection.style.display = 'block';
-    formSection.scrollIntoView({ behavior: 'smooth' });
-    if (isEditing) document.getElementById('finishEdit').click();
-  });
+  document.getElementById('backToForm').addEventListener('click', goHome);
   document.getElementById('clearBtn').addEventListener('click', () => {
     if (confirm('مسح جميع البيانات؟')) {
       document.querySelectorAll('#formSection input:not([type=file]), #formSection textarea').forEach(el => el.value = '');
@@ -414,6 +446,25 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
     }
   });
   document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+  document.getElementById('wordBtn').addEventListener('click', () => {
+    if (!preview.innerText.trim()) { alert('صّغ العقد أولاً'); return; }
+    const title = document.getElementById('contractTitle').value || 'عقد';
+    const safeName = title.replace(/[\\/:*?"<>|]/g,'').trim() || 'عقد';
+    const logoData = localStorage.getItem('oqood_logo') || '';
+    const logoImg = logoData ? `<div style="text-align:center;margin-bottom:12px;"><img src="${logoData}" style="max-height:60px;"></div>` : '';
+    const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>${safeName}</title></head><body style="font-family:Amiri,serif;padding:30px;">
+      ${logoImg}
+      <div style="text-align:center;font-family:Cairo,sans-serif;font-size:11px;color:#666;margin-bottom:20px;">منصة عقود — كليشة علوية</div>
+      ${preview.innerHTML}
+      <div style="text-align:center;font-size:10px;color:#999;margin-top:40px;border-top:1px solid #ddd;padding-top:10px;">منصة عقود — كليشة سفلية | هذا العقد باجتهاد شخصي وليس من مكتب محاماة</div>
+    </body></html>`;
+    const blob = new Blob([html], { type: 'application/msword' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = safeName + '.doc';
+    a.click();
+  });
 
   document.getElementById('downloadBtn').addEventListener('click', async () => {
     if (!preview.innerText.trim()) { alert('صّغ العقد أولاً'); return; }
