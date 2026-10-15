@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عقود — منصة إنشاء العقود الإلكترونية</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; padding-top: 20px; }
+        .header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 20px; border-radius: 10px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .form-section, .preview-section { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        .contract-preview { border: 2px dashed #ddd; padding: 30px; min-height: 500px; background: #fff; border-radius: 8px; outline: none; }
+        .contract-preview:focus { border-color: #3498db; }
+        .btn-primary { background-color: #3498db; border-color: #3498db; }
+        .btn-primary:hover { background-color: #2980b9; border-color: #2980b9; }
+        .btn-success { background-color: #2ecc71; border-color: #2ecc71; }
+        .actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .saved-contracts { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-top: 25px; }
+        .contract-item { padding: 15px; border-bottom: 1px solid #eee; }
+        .contract-item:hover { background-color: #f8f9fa; }
+        @media print { body * { visibility: hidden; } .contract-preview, .contract-preview * { visibility: visible; } .contract-preview { position: absolute; left: 0; top: 0; width: 100%; border: none; padding: 0; } }
+        .hint { font-size: 0.85rem; color: #6c757d; margin-top: 4px; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header text-center">
+            <h1 class="display-5"><i class="bi bi-file-earmark-text"></i> عقود</h1>
+            <p class="lead">أنشئ عقود بسيطة سريعة، عدّل البنود، وصدّر PDF — مناسب للاجتماعات</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-5">
+                <div class="form-section">
+                    <h3><i class="bi bi-pencil-square"></i> بيانات العقد</h3>
+                    <form id="contractForm">
+                        <div class="mb-3">
+                            <label for="contractType" class="form-label">نوع العقد</label>
+                            <select class="form-select" id="contractType">
+                                <option value="general">اتفاق عام</option>
+                                <option value="sale">عقد بيع</option>
+                                <option value="service">عقد خدمات</option>
+                                <option value="rent">عقد إيجار</option>
+                                <option value="partnership">عقد شراكة</option>
+                            </select>
+                            <div class="hint">يتغير بعض البنود الافتراضية حسب النوع</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contractTitle" class="form-label">عنوان العقد</label>
+                            <input type="text" class="form-control" id="contractTitle" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="party1" class="form-label">الطرف الأول</label>
+                            <input type="text" class="form-control" id="party1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="party2" class="form-label">الطرف الثاني</label>
+                            <input type="text" class="form-control" id="party2" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contractDate" class="form-label">تاريخ العقد</label>
+                            <input type="date" class="form-control" id="contractDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contractValue" class="form-label">قيمة العقد (ريال)</label>
+                            <input type="number" class="form-control" id="contractValue" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contractDetails" class="form-label">تفاصيل / البنود الأساسية</label>
+                            <textarea class="form-control" id="contractDetails" rows="5" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="additionalTerms" class="form-label">شروط إضافية</label>
+                            <textarea class="form-control" id="additionalTerms" rows="3"></textarea>
+                        </div>
+                        <div class="actions">
+                            <button type="button" id="generateBtn" class="btn btn-primary"><i class="bi bi-eye"></i> معاينة العقد</button>
+                            <button type="button" id="clearBtn" class="btn btn-secondary"><i class="bi bi-trash"></i> مسح</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="preview-section">
+                    <h3><i class="bi bi-file-text"></i> معاينة العقد <small class="text-muted">(قابلة للتعديل)</small></h3>
+                    <div class="contract-preview" id="contractPreview" contenteditable="true">
+                        <p class="text-center text-muted">سيظهر هنا نموذج العقد بعد إدخال البيانات والضغط على معاينة</p>
+                    </div>
+                    <div class="actions mt-3">
+                        <button type="button" id="printBtn" class="btn btn-outline-primary"><i class="bi bi-printer"></i> طباعة</button>
+                        <button type="button" id="downloadBtn" class="btn btn-outline-success"><i class="bi bi-file-earmark-pdf"></i> تحميل PDF</button>
+                        <button type="button" id="saveLocalBtn" class="btn btn-outline-secondary"><i class="bi bi-save"></i> حفظ محلي</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="saved-contracts">
+            <h3><i class="bi bi-folder-check"></i> العقود المحفوظة محلياً</h3>
+            <p class="text-muted">قاعدة بيانات بسيطة في المتصفح (للرجوع السريع)</p>
+            <div id="contractsList">
+                <p class="text-center text-muted">لا توجد عقود محفوظة بعد</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const { jsPDF } = window.jspdf;
+            const contractForm = document.getElementById('contractForm');
+            const contractPreview = document.getElementById('contractPreview');
+            const generateBtn = document.getElementById('generateBtn');
+            const printBtn = document.getElementById('printBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const saveLocalBtn = document.getElementById('saveLocalBtn');
+            const contractsList = document.getElementById('contractsList');
+            const contractType = document.getElementById('contractType');
+
+            document.getElementById('contractDate').valueAsDate = new Date();
+
+            const templates = {
+                general: "\u062aم الاتفاق بين الطرفين على ما يلي:\n",
+                sale: "\u064aتعهد الطرف الأول ببيع الموصوف في هذا العقد للطرف الثاني حسب البنود التالية:\n",
+                service: "\u064aلتزم الطرف الأول بتقديم الخدمات الموصوفة للطرف الثاني وفق البنود التالية:\n",
+                rent: "\u064aؤجّر الطرف الأول للطرف الثاني العين الموصوف وفق البنود التالية:\n",
+                partnership: "\u0627تفق الطرفان على دخول شراكة وفق البنود التالية:\n"
+            };
+
+            contractType.addEventListener('change', function() {
+                const t = templates[this.value] || '';
+                if (!document.getElementById('contractDetails').value) {
+                    document.getElementById('contractDetails').value = t;
+                }
+            });
+
+            generateBtn.addEventListener('click', generateContract);
+            printBtn.addEventListener('click', () => window.print());
+            clearBtn.addEventListener('click', function() {
+                if (confirm('\u0647ل أنت متأكد من مسح جميع البيانات؟')) {
+                    contractForm.reset();
+                    document.getElementById('contractDate').valueAsDate = new Date();
+                    contractPreview.innerHTML = '<p class="text-center text-muted">\u0633يظهر هنا نموذج العقد بعد إدخال البيانات والضغط على معاينة</p>';
+                }
+            });
+            downloadBtn.addEventListener('click', function() {
+                if (contractPreview.innerText.includes('\u0633يظهر هنا')) {
+                    alert('\u064aرجى إنشاء العقد أولاً');
+                    return;
+                }
+                generatePDF(false);
+            });
+            saveLocalBtn.addEventListener('click', function() {
+                const data = getFormData();
+                data.previewHtml = contractPreview.innerHTML;
+                saveToLocalStorage(data);
+                alert('\u062aم حفظ العقد محلياً');
+            });
+
+            function getFormData() {
+                return {
+                    type: contractType.value,
+                    title: document.getElementById('contractTitle').value,
+                    party1: document.getElementById('party1').value,
+                    party2: document.getElementById('party2').value,
+                    date: document.getElementById('contractDate').value,
+                    value: document.getElementById('contractValue').value,
+                    details: document.getElementById('contractDetails').value,
+                    terms: document.getElementById('additionalTerms').value,
+                    timestamp: new Date().toISOString()
+                };
+            }
+
+            function generateContract() {
+                const data = getFormData();
+                if (!data.title || !data.party1 || !data.party2 || !data.date || !data.value || !data.details) {
+                    alert('\u064aرجى ملء جميع الحقول المطلوبة');
+                    return;
+                }
+                const typeLabel = contractType.options[contractType.selectedIndex].text;
+                const contractHTML = `
+                    <h2 class="text-center">${data.title}</h2>
+                    <p class="text-center text-muted">${typeLabel} — تحريراً في ${formatDate(data.date)}</p>
+                    <hr>
+                    <p>بين كل من:</p>
+                    <p><strong>الطرف الأول:</strong> ${data.party1}</p>
+                    <p><strong>الطرف الثاني:</strong> ${data.party2}</p>
+                    <p>تم الاتفاق بين الطرفين على ما يلي:</p>
+                    <div style="border: 1px solid #eee; padding: 15px; margin: 15px 0; border-radius: 5px;">
+                        ${data.details.replace(/\n/g, '<br>')}
+                    </div>
+                    <p><strong>قيمة العقد:</strong> ${data.value} ريال سعودي</p>
+                    ${data.terms ? `<h4>شروط إضافية:</h4><div style="border: 1px solid #eee; padding: 15px; margin: 15px 0; border-radius: 5px;">${data.terms.replace(/\n/g, '<br>')}</div>` : ''}
+                    <div style="margin-top: 60px;">
+                        <div style="width: 45%; float: right;">
+                            <p>توقيع الطرف الأول: _______________</p>
+                            <p>الاسم: ${data.party1}</p>
+                        </div>
+                        <div style="width: 45%; float: left;">
+                            <p>توقيع الطرف الثاني: _______________</p>
+                            <p>الاسم: ${data.party2}</p>
+                        </div>
+                        <div style="clear: both;"></div>
+                    </div>
+                `;
+                contractPreview.innerHTML = contractHTML;
+            }
+
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+
+            async function generatePDF(forDrive = false) {
+                return new Promise((resolve, reject) => {
+                    html2canvas(contractPreview).then(canvas => {
+                        const imgData = canvas.toDataURL('image/png');
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+                        const imgProps = pdf.getImageProperties(imgData);
+                        const pdfWidth = pdf.internal.pageSize.getWidth();
+                        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                        if (forDrive) {
+                            resolve(pdf.output('blob'));
+                        } else {
+                            pdf.save('\u0639قد.pdf');
+                            resolve(null);
+                        }
+                    }).catch(reject);
+                });
+            }
+
+            function saveToLocalStorage(contractData) {
+                let contracts = JSON.parse(localStorage.getItem('oqood_contracts')) || [];
+                contracts.push(contractData);
+                localStorage.setItem('oqood_contracts', JSON.stringify(contracts));
+                loadSavedContracts();
+            }
+
+            function loadSavedContracts() {
+                const contracts = JSON.parse(localStorage.getItem('oqood_contracts')) || [];
+                if (contracts.length === 0) {
+                    contractsList.innerHTML = '<p class="text-center text-muted">\u0644ا توجد عقود محفوظة بعد</p>';
+                    return;
+                }
+                contractsList.innerHTML = '';
+                contracts.forEach((contract, index) => {
+                    const el = document.createElement('div');
+                    el.className = 'contract-item';
+                    el.innerHTML = `
+                        <h5>${contract.title || '\u0639قد'}</h5>
+                        <p><strong>الأطراف:</strong> ${contract.party1} — ${contract.party2}</p>
+                        <p><strong>القيمة:</strong> ${contract.value} ريال</p>
+                        <p><strong>التاريخ:</strong> ${formatDate(contract.date)}</p>
+                        <button class="btn btn-sm btn-outline-primary view-contract" data-index="${index}">عرض</button>
+                        <button class="btn btn-sm btn-outline-danger delete-contract" data-index="${index}">حذف</button>
+                    `;
+                    contractsList.appendChild(el);
+                });
+                document.querySelectorAll('.view-contract').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const idx = this.getAttribute('data-index');
+                        const c = contracts[idx];
+                        loadContractToForm(c);
+                    });
+                });
+                document.querySelectorAll('.delete-contract').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const idx = this.getAttribute('data-index');
+                        if (confirm('\u062dذف هذا العقد؟')) {
+                            contracts.splice(idx, 1);
+                            localStorage.setItem('oqood_contracts', JSON.stringify(contracts));
+                            loadSavedContracts();
+                        }
+                    });
+                });
+            }
+
+            function loadContractToForm(contract) {
+                document.getElementById('contractTitle').value = contract.title || '';
+                document.getElementById('party1').value = contract.party1 || '';
+                document.getElementById('party2').value = contract.party2 || '';
+                document.getElementById('contractDate').value = contract.date || '';
+                document.getElementById('contractValue').value = contract.value || '';
+                document.getElementById('contractDetails').value = contract.details || '';
+                document.getElementById('additionalTerms').value = contract.terms || '';
+                if (contract.type) contractType.value = contract.type;
+                if (contract.previewHtml) {
+                    contractPreview.innerHTML = contract.previewHtml;
+                } else {
+                    generateContract();
+                }
+                window.scrollTo(0, 0);
+            }
+
+            loadSavedContracts();
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
