@@ -108,7 +108,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
       <div class="col-md-6"><label class="form-label"><span id="lblTitle">عنوان العقد</span> <span class="req">*</span></label>
         <input class="form-control" id="contractTitle" placeholder="مثال: تقديم استشارة تقنية"></div>
       <div class="col-md-6"><label class="form-label" id="lblDate">التاريخ</label><input type="date" class="form-control" id="contractDate"></div>
-      <div class="col-md-6"><label class="form-label" id="lblValue">القيمة (ريال)</label><input type="number" class="form-control" id="contractValue"></div>
+      <div class="col-md-6"><label class="form-label" id="lblValue">القيمة</label><div class="input-group"><input type="number" inputmode="decimal" min="0" step="any" class="form-control" id="contractValue" name="contract-amount" autocomplete="off" data-1p-ignore data-lpignore="true"><select class="form-select" id="contractCurrency" style="max-width:46%" autocomplete="off"></select></div></div>
     </div>
     <div class="mt-3"><label class="form-label"><span id="lblRequest">ما تريده في العقد</span> <span class="req">*</span></label>
       <textarea class="form-control" id="userRequest" rows="4" placeholder="اكتب بلغتك العادية..."></textarea></div>
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const T = {
     ar: {
       home:'الرئيسية', parties:'أطراف العقد', p1:'الطرف الأول', p2:'الطرف الثاني',
-      details:'تفاصيل العقد', type:'نوع العقد', title:'عنوان العقد', date:'التاريخ', value:'القيمة (ريال)',
+      details:'تفاصيل العقد', type:'نوع العقد', title:'عنوان العقد', date:'التاريخ', value:'القيمة',
       request:'ما تريده في العقد', extra:'شروط إضافية (اختياري)', nda:'إضافة بنود اتفاقية السرية',
       upload:'رفع عقد للاستفادة من بنوده (اختياري)', logo:'شعار العقد (اختياري) — يظهر ككليشة علوية',
       generate:'صياغة قانونية', clear:'مسح', preview:'معاينة العقد', edit:'تعديل النص',
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     en: {
       home:'Home', parties:'Contract Parties', p1:'Party One', p2:'Party Two',
-      details:'Contract Details', type:'Contract Type', title:'Contract Title', date:'Date', value:'Value (SAR)',
+      details:'Contract Details', type:'Contract Type', title:'Contract Title', date:'Date', value:'Value',
       request:'What you want in the contract', extra:'Additional Terms (optional)', nda:'Add confidentiality clauses',
       upload:'Upload contract to use its clauses (optional)', logo:'Contract Logo (optional) — appears as header',
       generate:'Generate Legal Draft', clear:'Clear', preview:'Contract Preview', edit:'Edit Text',
@@ -247,6 +247,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const el = document.getElementById(id);
       if (el) el.textContent = map[id];
     });
+    fillCurrencies(lang);
     document.getElementById('p1_name').placeholder = t.phName;
     document.getElementById('p2_name').placeholder = t.phName;
     document.getElementById('p1_id').placeholder = t.phId;
@@ -326,12 +327,31 @@ document.addEventListener('DOMContentLoaded', function() {
     return /^\d{10,11}$/.test(id.replace(/\D/g,''));
   }
 
+  const CURRENCIES = [
+    ['SAR','ريال سعودي','Saudi Riyal'], ['USD','دولار أمريكي','US Dollar'], ['EUR','يورو','Euro'],
+    ['AED','درهم إماراتي','UAE Dirham'], ['KWD','دينار كويتي','Kuwaiti Dinar'], ['QAR','ريال قطري','Qatari Riyal'],
+    ['BHD','دينار بحريني','Bahraini Dinar'], ['OMR','ريال عماني','Omani Rial'], ['EGP','جنيه مصري','Egyptian Pound'],
+    ['GBP','جنيه إسترليني','British Pound']
+  ];
+  function fillCurrencies(lang) {
+    const sel = document.getElementById('contractCurrency');
+    let cur = sel.value;
+    if (!cur) { try { cur = localStorage.getItem('oqood.currency') || 'SAR'; } catch (e) { cur = 'SAR'; } }
+    sel.innerHTML = CURRENCIES.map(c => `<option value="${c[0]}">${lang === 'en' ? c[2] : c[1]} (${c[0]})</option>`).join('');
+    sel.value = CURRENCIES.some(c => c[0] === cur) ? cur : 'SAR';
+  }
+  function currencyText(code) {
+    const c = CURRENCIES.find(x => x[0] === code) || CURRENCIES[0];
+    return `${c[1]} (${c[2]} - ${c[0]})`;
+  }
+
   function collectData() {
     return {
       typeLabel: document.getElementById('contractType').options[document.getElementById('contractType').selectedIndex].text,
       title: document.getElementById('contractTitle').value,
       date: document.getElementById('contractDate').value,
       value: document.getElementById('contractValue').value,
+      currency: document.getElementById('contractCurrency').value || 'SAR',
       userRequest: document.getElementById('userRequest').value,
       extraTerms: document.getElementById('extraTerms').value,
       includeNDA: document.getElementById('includeNDA').checked,
@@ -381,7 +401,7 @@ ${langNote}
 - نوع العقد: ${d.typeLabel}
 - العنوان: ${d.title}
 - التاريخ: ${formatDate(d.date)}
-- القيمة: ${d.value} ريال سعودي
+- القيمة: ${d.value ? d.value + ' ' + currencyText(d.currency) : 'غير محددة'}
 
 الطرف الأول: ${d.p1.name} | هوية: ${d.p1.id||'-'} | جوال: ${d.p1.mobile||'-'} | ميلاد: ${formatDate(d.p1.dob)||'-'}
 الطرف الثاني: ${d.p2.name} | هوية: ${d.p2.id||'-'} | جوال: ${d.p2.mobile||'-'} | ميلاد: ${formatDate(d.p2.dob)||'-'}
@@ -452,6 +472,9 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
     }
   }
 
+  fillCurrencies(document.documentElement.lang === 'en' ? 'en' : 'ar');
+  document.getElementById('contractCurrency').addEventListener('change', e => { try { localStorage.setItem('oqood.currency', e.target.value); } catch (x) {} });
+  document.querySelectorAll('#formSection input:not([type=file]):not([type=checkbox]), #formSection textarea').forEach(el => { el.setAttribute('autocomplete', 'off'); el.setAttribute('data-1p-ignore', ''); });
   document.getElementById('aiGenerateBtn').addEventListener('click', generateWithAI);
   document.getElementById('backToForm').addEventListener('click', goHome);
   document.getElementById('clearBtn').addEventListener('click', () => {
