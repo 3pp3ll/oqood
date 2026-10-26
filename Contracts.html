@@ -36,8 +36,10 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
 .lang-group .btn{padding:5px 11px;font-size:.82rem;border-radius:8px;}
 .editor-toolbar{display:none;background:#f8f9fa;border:1px solid #e2ddd4;border-radius:10px;padding:8px 10px;margin-bottom:10px;gap:6px;flex-wrap:wrap;align-items:center;}
 .editor-toolbar.show{display:flex;}
-.modal-backdrop{position:fixed;inset:0;background:#d6dee8;z-index:9999;display:none;align-items:center;justify-content:center;}
-.modal-backdrop.show{display:flex;}
+.key-overlay{position:fixed;inset:0;background:rgba(15,39,68,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:9999;display:none;align-items:center;justify-content:center;opacity:1;}
+.key-overlay.show{display:flex;}
+.key-overlay .modal-box{opacity:1;}
+.key-status{font-size:.8rem;margin:-6px 0 12px;min-height:1em;}
 .modal-box{background:#ffffff;border-radius:16px;padding:24px;width:min(440px,92vw);box-shadow:0 20px 50px rgba(15,39,68,.25);color:#1a2332;border:1px solid #b0b8c4;}
 .bilingual-table{width:100%;border-collapse:collapse;margin:8px 0;}
 .bilingual-table td{border:1px solid #eee;padding:10px 12px;vertical-align:top;width:50%;}
@@ -184,11 +186,12 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
   </div>
 </div>
 
-<div class="modal-backdrop" id="keyModal">
+<div class="key-overlay" id="keyModal">
   <div class="modal-box">
     <h5 class="mb-3" style="font-family:Amiri;color:#0f2744;">مفتاح OpenRouter</h5>
     <p class="small mb-3" style="color:#333;">يُحفظ في متصفحك فقط. لا يُرسل لأي سيرفر.</p>
-    <input type="text" class="form-control mb-3 key-mask" id="apiKeyInput" placeholder="sk-or-v1-..." autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
+    <input type="text" class="form-control mb-3 key-mask" dir="ltr" id="apiKeyInput" placeholder="sk-or-v1-..." autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
+    <div class="key-status" id="keyStatus"></div>
     <div class="d-flex gap-2">
       <button type="button" class="btn btn-primary" id="saveKeyBtn">حفظ</button>
       <button type="button" class="btn btn-outline-secondary" id="closeKeyBtn">إغلاق</button>
@@ -278,17 +281,25 @@ document.addEventListener('DOMContentLoaded', function() {
     clickTimer = setTimeout(() => clickCount = 0, 1500);
     if (clickCount >= 5) {
       clickCount = 0;
-      document.getElementById('apiKeyInput').value = localStorage.getItem('oqood_openrouter_key') || '';
+      const k = localStorage.getItem('oqood_openrouter_key') || '';
+      document.getElementById('apiKeyInput').value = k;
+      keyStatus(k ? 'المفتاح محفوظ في هذا المتصفح ✓' : 'لا يوجد مفتاح محفوظ', k ? '#1a7f4b' : '#888');
       document.getElementById('keyModal').classList.add('show');
+      setTimeout(() => document.getElementById('apiKeyInput').focus(), 50);
     }
   });
   logo.addEventListener('mousedown', e => e.preventDefault());
   logo.addEventListener('selectstart', e => e.preventDefault());
 
+  function keyStatus(t, c) { const el = document.getElementById('keyStatus'); el.textContent = t; el.style.color = c; }
   document.getElementById('saveKeyBtn').onclick = () => {
-    localStorage.setItem('oqood_openrouter_key', document.getElementById('apiKeyInput').value.trim());
-    document.getElementById('keyModal').classList.remove('show');
+    const v = document.getElementById('apiKeyInput').value.trim();
+    if (!v) { keyStatus('اكتب المفتاح أولاً', '#c0392b'); return; }
+    try { localStorage.setItem('oqood_openrouter_key', v); } catch (e) { keyStatus('تعذّر الحفظ في هذا المتصفح', '#c0392b'); return; }
+    keyStatus('تم الحفظ ✓', '#1a7f4b');
+    setTimeout(() => document.getElementById('keyModal').classList.remove('show'), 700);
   };
+  document.getElementById('keyModal').addEventListener('click', e => { if (e.target.id === 'keyModal') e.currentTarget.classList.remove('show'); });
   document.getElementById('closeKeyBtn').onclick = () => document.getElementById('keyModal').classList.remove('show');
 
   document.getElementById('contractDate').valueAsDate = new Date();
