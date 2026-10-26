@@ -122,9 +122,8 @@
       return `<div class="acc-me"><div class="acc-av">${initial()}</div><div style="min-width:0"><b>${esc(p.name || '')}</b><span>${esc(st.user.email)}</span></div></div>
         <div class="acc-plan">${plan}</div>
         ${st.flash ? `<div class="acc-msg ok">${esc(st.flash)}</div>` : ''}
-        <button type="button" class="acc-mi" data-act="home">${IC.home} الرئيسية</button>
+        ${p.is_admin ? `<button type="button" class="acc-mi" data-act="admin">${IC.panel} لوحة التحكم</button>` : `<button type="button" class="acc-mi" data-act="home">${IC.home} الرئيسية</button>`}
         ${sub ? '' : `<button type="button" class="acc-mi" data-act="key">${IC.key} مفتاح OpenRouter</button>`}
-        ${p.is_admin ? `<button type="button" class="acc-mi" data-act="admin">${IC.panel} لوحة التحكم</button>` : ''}
         <button type="button" class="acc-mi out" data-act="out">${IC.out} تسجيل الخروج</button>`;
     },
   };
