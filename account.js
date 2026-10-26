@@ -41,7 +41,8 @@
     st.user = u;
     if (!u) { st.prof = null; adminHide(); paint(); return; }
     if (changed || !st.prof) {
-      const { data } = await sb.from('profiles').select('*').eq('id', u.id).maybeSingle();
+      const { data, error } = await sb.from('profiles').select('*').eq('id', u.id).maybeSingle();
+      st.profErr = error ? 'تعذّر قراءة بيانات حسابك من السيرفر: ' + (error.message || error.code) : (!data ? 'حسابك غير موجود في جدول المستخدمين. شغّل ملف قاعدة البيانات ثم سطر المالك.' : '');
       st.prof = data || { name: (u.user_metadata && u.user_metadata.name) || u.email.split('@')[0], email: u.email, plan: 'none' };
     }
     paint();
@@ -122,6 +123,7 @@
       return `<div class="acc-me"><div class="acc-av">${initial()}</div><div style="min-width:0"><b>${esc(p.name || '')}</b><span>${esc(st.user.email)}</span></div></div>
         <div class="acc-plan">${plan}</div>
         ${st.flash ? `<div class="acc-msg ok">${esc(st.flash)}</div>` : ''}
+        ${st.profErr ? `<div class="acc-msg err">${esc(st.profErr)}</div>` : ''}
         ${p.is_admin ? `<button type="button" class="acc-mi" data-act="admin">${IC.panel} لوحة التحكم</button>` : `<button type="button" class="acc-mi" data-act="home">${IC.home} الرئيسية</button>`}
         ${sub ? '' : `<button type="button" class="acc-mi" data-act="key">${IC.key} مفتاح OpenRouter</button>`}
         <button type="button" class="acc-mi out" data-act="out">${IC.out} تسجيل الخروج</button>`;
