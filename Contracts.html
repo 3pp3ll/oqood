@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="account.css">
 <style>
 :root{--navy:#0f2744;--gold:#c9a84c;--ink:#1a2332;--muted:#5c6b7a;--line:#e2ddd4;}
 body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 0%,#f7f5f1 100%);color:var(--ink);min-height:100vh;padding:24px 0 60px;}
@@ -170,6 +171,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
     <div class="contract-frame">
       <div class="contract-paper" id="contractPreview" contenteditable="false"></div>
     </div>
+    <div class="src-box no-print" id="sourcesBox" hidden></div>
     <div class="actions">
       <button type="button" id="printBtn" class="btn btn-outline-primary"><i class="bi bi-printer"></i> <span id="lblPrint">طباعة</span></button>
       <button type="button" id="downloadBtn" class="btn btn-outline-success"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
@@ -189,7 +191,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
 <div class="key-overlay" id="keyModal">
   <div class="modal-box">
     <h5 class="mb-3" style="font-family:Amiri;color:#0f2744;">مفتاح OpenRouter</h5>
-    <p class="small mb-3" style="color:#333;">يُحفظ في متصفحك فقط. لا يُرسل لأي سيرفر.</p>
+    <p class="small mb-3" style="color:#333;">يُحفظ في متصفحك فقط، ويُستخدم لصياغة عقودك. تقدر تاخذ مفتاح من <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>.</p>
     <input type="text" class="form-control mb-3 key-mask" dir="ltr" id="apiKeyInput" placeholder="sk-or-v1-..." autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
     <div class="key-status" id="keyStatus"></div>
     <div class="d-flex gap-2">
@@ -272,21 +274,23 @@ document.addEventListener('DOMContentLoaded', function() {
     formSection.scrollIntoView({ behavior: 'smooth' });
     if (isEditing) document.getElementById('finishEdit').click();
   }
-  document.getElementById('homeBtn').onclick = goHome;
+  const hb = document.getElementById('homeBtn'); if (hb) hb.onclick = goHome;
   document.getElementById('homeBtn2').onclick = goHome;
+  window.oqoodHome = goHome;
 
-  logo.addEventListener('click', () => {
-    clickCount++;
-    clearTimeout(clickTimer);
-    clickTimer = setTimeout(() => clickCount = 0, 1500);
-    if (clickCount >= 5) {
-      clickCount = 0;
+  function openKeyModal() {
       const k = localStorage.getItem('oqood_openrouter_key') || '';
       document.getElementById('apiKeyInput').value = k;
       keyStatus(k ? 'المفتاح محفوظ في هذا المتصفح ✓' : 'لا يوجد مفتاح محفوظ', k ? '#1a7f4b' : '#888');
       document.getElementById('keyModal').classList.add('show');
       setTimeout(() => document.getElementById('apiKeyInput').focus(), 50);
-    }
+  }
+  window.openKeyModal = openKeyModal;
+  logo.addEventListener('click', () => {
+    clickCount++;
+    clearTimeout(clickTimer);
+    clickTimer = setTimeout(() => clickCount = 0, 1500);
+    if (clickCount >= 5) { clickCount = 0; openKeyModal(); }
   });
   logo.addEventListener('mousedown', e => e.preventDefault());
   logo.addEventListener('selectstart', e => e.preventDefault());
@@ -298,6 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
     try { localStorage.setItem('oqood_openrouter_key', v); } catch (e) { keyStatus('تعذّر الحفظ في هذا المتصفح', '#c0392b'); return; }
     keyStatus('تم الحفظ ✓', '#1a7f4b');
     setTimeout(() => document.getElementById('keyModal').classList.remove('show'), 700);
+    if (window.OQ && OQ.refresh) OQ.refresh();
   };
   document.getElementById('keyModal').addEventListener('click', e => { if (e.target.id === 'keyModal') e.currentTarget.classList.remove('show'); });
   document.getElementById('closeKeyBtn').onclick = () => document.getElementById('keyModal').classList.remove('show');
@@ -359,6 +364,8 @@ document.addEventListener('DOMContentLoaded', function() {
     return `${c[1]} (${c[2]} - ${c[0]})`;
   }
 
+  const escH = (x) => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
   function collectData() {
     return {
       typeLabel: document.getElementById('contractType').options[document.getElementById('contractType').selectedIndex].text,
@@ -382,8 +389,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   async function generateWithAI() {
     const d = collectData();
+    const useServer = !!(window.OQ && OQ.ready);
     const key = localStorage.getItem('oqood_openrouter_key') || '';
-    if (!key) { alert('أضغط على الشعار "ع" خمس مرات لإدخال مفتاح OpenRouter'); return; }
+    if (useServer && !OQ.user()) { OQ.open(); return; }
+    if (!useServer && !key) { alert('أضغط على الشعار "ع" خمس مرات لإدخال مفتاح OpenRouter'); return; }
     if (!d.p1.name || !d.p2.name || !d.title || !d.userRequest) {
       alert('يرجى ملء الحقول الإلزامية');
       return;
@@ -431,7 +440,19 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
 - ابدأ مباشرة بنص العقد.
 - استخدم HTML بسيط. اترك سطر فارغ بين المواد.`;
 
+    let sources = [];
     try {
+      let text = '';
+      if (useServer) {
+        const fmt = (p) => ({ name: p.name, id: p.id, mobile: p.mobile, dob: formatDate(p.dob) });
+        const r = await OQ.draft({
+          d: { typeLabel: d.typeLabel, title: d.title, date: formatDate(d.date), valueText: d.value ? d.value + ' ' + currencyText(d.currency) : '',
+               userRequest: d.userRequest, extraTerms: d.extraTerms, includeNDA: d.includeNDA, lang: d.lang, p1: fmt(d.p1), p2: fmt(d.p2) },
+          uploadedText: uploadedText.substring(0, 2500)
+        });
+        text = String(r.html || '').replace(/```html|```/g,'').trim();
+        sources = r.sources || [];
+      } else {
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -448,7 +469,8 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      let text = (data.choices?.[0]?.message?.content || '').replace(/```html|```/g,'').trim();
+      text = (data.choices?.[0]?.message?.content || '').replace(/```html|```/g,'').trim();
+      }
       if (!text.includes('<')) text = '<p>' + text.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>') + '</p>';
 
       let logoHtml = '';
@@ -474,12 +496,16 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
         <div class="disclaimer">هذا العقد تم إعداده باجتهاد شخصي وليس صادراً من مكتب محاماة. يُنصح بمراجعته من مختص قبل التوقيع.</div>
       `;
 
+      const sb = document.getElementById('sourcesBox');
+      sb.hidden = !sources.length;
+      sb.innerHTML = sources.length ? `<details><summary>المواد النظامية اللي رجعت لها المنصة (${sources.length})</summary><ol>${sources.map(s => `<li>${escH(s.law)} — ${escH(s.num)}${s.url ? ` · <a href="${escH(s.url)}" target="_blank" rel="noopener">المصدر</a>` : ''}</li>`).join('')}</ol><p class="small text-muted mb-0">هذي المواد اللي أُعطيت للصياغة. المواد اللي استند لها العقد فعلاً مذكورة في قسم «المرجعية النظامية» آخر العقد.</p></details>` : '';
+
       formSection.style.display = 'none';
       previewSection.style.display = 'block';
       previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     } catch (err) {
-      alert('خطأ: ' + err.message);
+      if (!err.quiet) alert('خطأ: ' + err.message);
     } finally {
       btn.disabled = false;
       btn.innerHTML = old;
@@ -592,5 +618,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
   loadList();
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="account.js"></script>
 </body>
 </html>
