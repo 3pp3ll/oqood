@@ -1,8 +1,8 @@
 /* عقود — الحساب ولوحة التحكم (Supabase) */
 (function () {
   // ===== إعداد الربط: قيم عامة وآمنة للنشر =====
-  const SB_URL = '';
-  const SB_ANON = '';
+  const SB_URL = 'https://ecqhdztlrckupjlizxsv.supabase.co';
+  const SB_ANON = 'sb_publishable_nSXC6s1s8zJbUaGPOxLPMA_pKo8TOY7';
   // ===============================================
 
   const READY = !!(SB_URL && SB_ANON && window.supabase);
