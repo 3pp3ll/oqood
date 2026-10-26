@@ -133,6 +133,64 @@ do $$ begin
   end if;
 end $$;
 
+-- ============ إعدادات الموقع وأنواع العقود ونماذجها ============
+create table if not exists public.site_settings (
+  key text primary key,
+  value jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.contract_types (
+  id bigserial primary key,
+  label text not null,
+  ord int not null default 0,
+  active boolean not null default true
+);
+create table if not exists public.contract_templates (
+  id bigserial primary key,
+  type_id bigint references public.contract_types(id) on delete set null,
+  title text not null,
+  file_name text,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+insert into public.contract_types (label, ord)
+select x.label, x.ord from (values
+  ('عقد خدمات / استشارة', 1), ('عقد بيع', 2), ('عقد إيجار', 3),
+  ('عقد شراكة', 4), ('اتفاق عام', 5), ('اتفاقية سرية (مستقلة)', 6)
+) as x(label, ord)
+where not exists (select 1 from public.contract_types);
+
+alter table public.site_settings enable row level security;
+alter table public.contract_types enable row level security;
+alter table public.contract_templates enable row level security;
+
+drop policy if exists "settings read" on public.site_settings;
+create policy "settings read" on public.site_settings for select using (true);
+drop policy if exists "settings admin" on public.site_settings;
+create policy "settings admin" on public.site_settings for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "types read" on public.contract_types;
+create policy "types read" on public.contract_types for select using (true);
+drop policy if exists "types admin" on public.contract_types;
+create policy "types admin" on public.contract_types for all using (public.is_admin()) with check (public.is_admin());
+
+-- النماذج خاصة بالمالك؛ دالة الصياغة تقرأها من السيرفر
+drop policy if exists "templates admin" on public.contract_templates;
+create policy "templates admin" on public.contract_templates for all using (public.is_admin()) with check (public.is_admin());
+
+grant select on public.site_settings, public.contract_types to anon, authenticated;
+grant insert, update, delete on public.site_settings, public.contract_types to authenticated;
+grant select, insert, update, delete on public.contract_templates to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    grant select on public.site_settings, public.contract_types, public.contract_templates to service_role;
+  end if;
+end $$;
+
 -- ============ اجعل نفسك المالك ============
--- بعد ما تسجّل حسابك من صفحة عقود، شغّل هذا السطر بإيميلك:
--- update public.profiles set is_admin = true, plan = 'sub' where email = 'ايميلك@example.com';
+-- بعد ما تسجّل حسابك من صفحة عقود، شغّل هذا بإيميلك:
+-- insert into public.profiles (id, email, name, is_admin, plan)
+-- select id, email, 'admin', true, 'sub' from auth.users where email = 'your@email.com'
+-- on conflict (id) do update set is_admin = true, plan = 'sub';

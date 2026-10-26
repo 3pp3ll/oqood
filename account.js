@@ -119,7 +119,7 @@
       const plan = p.is_admin ? `<span class="acc-pill">المالك</span><br>الصياغة بمفتاح الإدارة.`
         : sub ? `<span class="acc-pill">مشترك${until}</span><br>الصياغة شغالة ضمن اشتراكك. ما تحتاج تضيف شي.`
         : key ? `<span class="acc-pill w">مفتاحك الخاص</span><br>تصيغ العقود بمفتاح OpenRouter حقك.`
-        : `<span class="acc-pill n">غير مشترك</span><br>أضف مفتاح OpenRouter حقك، أو تواصل معنا للاشتراك.`;
+        : `<span class="acc-pill n">غير مشترك</span><br>${esc((window.OQ_SITE && OQ_SITE.subscribeMsg) || 'أضف مفتاح OpenRouter حقك، أو تواصل معنا للاشتراك.')}`;
       return `<div class="acc-me"><div class="acc-av">${initial()}</div><div style="min-width:0"><b>${esc(p.name || '')}</b><span>${esc(st.user.email)}</span></div></div>
         <div class="acc-plan">${plan}</div>
         ${st.flash ? `<div class="acc-msg ok">${esc(st.flash)}</div>` : ''}
@@ -258,9 +258,12 @@
         <button type="button" class="btn btn-sm btn-outline-secondary" data-a="close">رجوع للعقود</button></div>
       <div class="adm-tabs" role="tablist">
         <button type="button" role="tab" data-tab="laws" aria-selected="${admTab === 'laws'}">مكتبة الأنظمة</button>
+        <button type="button" role="tab" data-tab="templates" aria-selected="${admTab === 'templates'}">نماذج العقود</button>
+        <button type="button" role="tab" data-tab="types" aria-selected="${admTab === 'types'}">أنواع العقود</button>
         <button type="button" role="tab" data-tab="users" aria-selected="${admTab === 'users'}">المشتركين</button>
+        <button type="button" role="tab" data-tab="settings" aria-selected="${admTab === 'settings'}">إعدادات الموقع</button>
       </div><div id="admBody"></div>`;
-    admTab === 'laws' ? renderLaws() : renderUsers();
+    ({ laws: renderLaws, templates: renderTemplates, types: renderTypes, users: renderUsers, settings: renderSettings })[admTab]();
   }
 
   function renderLaws() {
@@ -364,6 +367,7 @@
     const tab = t.closest('[data-tab]'); if (tab) { admTab = tab.dataset.tab; admRender(); return; }
     const a = t.closest('[data-a]') && t.closest('[data-a]').dataset.a;
     if (a === 'close') { adminHide(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    if (a && EXTRA[a]) { EXTRA[a](t.closest('[data-a]')); return; }
     if (a === 'parse') {
       const file = $('#lwFile').files[0]; let text = $('#lwText').value;
       msg('lwMsg', 'جاري القراءة...', true);
@@ -429,6 +433,7 @@
       on.nextElementSibling.textContent = on.checked ? 'مفعّل' : 'موقوف';
     }
     if (e.target.id === 'usrQ') renderUserRows();
+    if (e.target.matches('[data-tyon]')) e.target.nextElementSibling.textContent = e.target.checked ? 'ظاهر' : 'موقوف';
   }
 
   let usersCache = [];
@@ -453,12 +458,169 @@
       </tbody></table>` : '<p class="text-muted small m-0">ما فيه نتائج.</p>';
   }
 
+  // ---------- إعدادات الموقع ----------
+  const SET_FIELDS = [
+    ['title', 'اسم المنصة', 'input', 'عقود'],
+    ['subtitle', 'الوصف تحت الاسم', 'input', 'صياغة قانونية فاخرة'],
+    ['disclaimer', 'نص إخلاء المسؤولية أسفل العقد', 'textarea', ''],
+    ['wordHeader', 'الكليشة العلوية في ملف Word', 'input', ''],
+    ['wordFooter', 'الكليشة السفلية في ملف Word', 'input', ''],
+    ['subscribeMsg', 'رسالة الاشتراك لغير المشتركين', 'textarea', 'مثال: للاشتراك تواصل واتساب 05xxxxxxxx'],
+    ['model', 'نموذج الذكاء الاصطناعي (OpenRouter)', 'input', 'openai/gpt-4o-mini'],
+  ];
+  let siteCfg = {}, typesCache = [];
+  async function loadSite() {
+    const [a, b] = await Promise.all([
+      sb.from('site_settings').select('value').eq('key', 'site').maybeSingle(),
+      sb.from('contract_types').select('*').order('ord').order('id'),
+    ]);
+    siteCfg = (a.data && a.data.value) || {};
+    typesCache = b.data || [];
+    if (window.applySite) window.applySite(siteCfg, typesCache.filter((x) => x.active));
+  }
+  function renderSettings() {
+    const S = Object.assign({}, window.OQ_SITE || {}, siteCfg);
+    $('#admBody').innerHTML = `<div class="adm-box"><h6>إعدادات الموقع</h6>
+      ${SET_FIELDS.map(([k, label, kind, ph]) => `<div class="mb-3"><label class="form-label" for="set_${k}">${label}</label>
+        ${kind === 'textarea' ? `<textarea class="form-control" id="set_${k}" rows="2" placeholder="${esc(ph)}">${esc(S[k] || '')}</textarea>`
+          : `<input class="form-control" id="set_${k}" ${k === 'model' ? 'dir="ltr"' : ''} placeholder="${esc(ph)}" value="${esc(S[k] || '')}">`}</div>`).join('')}
+      <p class="adm-hint" style="margin:-6px 0 12px">النموذج يُكتب بصيغة OpenRouter مثل <span dir="ltr">openai/gpt-4o-mini</span> أو <span dir="ltr">anthropic/claude-sonnet-4.5</span>. اتركه فاضي للافتراضي.</p>
+      <button type="button" class="btn btn-primary" data-a="saveSettings">حفظ الإعدادات</button>
+      <div class="acc-msg" id="setMsg" role="status" style="margin:10px 0 0"></div></div>`;
+  }
+
+  // ---------- أنواع العقود ----------
+  function renderTypes() {
+    $('#admBody').innerHTML = `<div class="adm-box"><h6>أنواع العقود</h6>
+      <p class="adm-hint" style="margin:0 0 10px">هذي القائمة اللي يختار منها المستخدم «نوع العقد». الموقوف ما يظهر للمستخدمين.</p>
+      <div id="tyRows"></div>
+      <div class="d-flex gap-2 mt-3 flex-wrap"><input class="form-control" id="tyNew" placeholder="نوع جديد، مثال: عقد عمل" style="max-width:320px">
+        <button type="button" class="btn btn-primary" data-a="addType">إضافة</button></div>
+      <div class="acc-msg" id="tyMsg" role="status" style="margin:10px 0 0"></div></div>`;
+    drawTypes();
+  }
+  function drawTypes() {
+    $('#tyRows').innerHTML = typesCache.length ? typesCache.map((x, i) => `<div class="adm-law" data-ty="${x.id}">
+        <input class="form-control form-control-sm" data-tylabel value="${esc(x.label)}" style="flex:1;min-width:180px">
+        <div class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" data-tyon id="tyOn${x.id}" ${x.active ? 'checked' : ''}><label class="form-check-label small" for="tyOn${x.id}">${x.active ? 'ظاهر' : 'موقوف'}</label></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-a="tyUp" ${i ? '' : 'disabled'} aria-label="لفوق">▲</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-a="tyDown" ${i < typesCache.length - 1 ? '' : 'disabled'} aria-label="لتحت">▼</button>
+        <button type="button" class="btn btn-sm btn-primary" data-a="tySave">حفظ</button>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-a="tyDel">حذف</button></div>`).join('')
+      : '<p class="text-muted small m-0">ما فيه أنواع. أضف أول نوع.</p>';
+  }
+  async function typesChanged() { await loadSite(); if ($('#tyRows')) drawTypes(); }
+
+  // ---------- نماذج العقود ----------
+  let tplParsed = '';
+  function typeOptions(sel) { return `<option value="">كل الأنواع</option>` + typesCache.map((x) => `<option value="${x.id}" ${String(sel) === String(x.id) ? 'selected' : ''}>${esc(x.label)}</option>`).join(''); }
+  function renderTemplates() {
+    $('#admBody').innerHTML = `<div class="adm-box"><h6>إضافة نموذج عقد</h6>
+        <p class="adm-hint" style="margin:0 0 10px">ارفع عقد جاهز من مكتبك (Word أو PDF). لما يختار المستخدم نفس نوع العقد، الصياغة تمشي على أسلوب النموذج وترتيب بنوده. النماذج ما يشوفها إلا أنت.</p>
+        <div class="adm-grid">
+          <div><label class="form-label" for="tpTitle">اسم النموذج <span class="req">*</span></label><input class="form-control" id="tpTitle" placeholder="مثال: عقد إيجار سكني — نموذج المكتب"></div>
+          <div><label class="form-label" for="tpType">نوع العقد</label><select class="form-select" id="tpType">${typeOptions('')}</select></div>
+        </div>
+        <div class="mt-3"><label class="form-label" for="tpFile">الملف (Word أو PDF أو نص)</label><input type="file" class="form-control" id="tpFile" accept=".pdf,.docx,.txt,.html,.htm"></div>
+        <div class="mt-3"><label class="form-label" for="tpText">أو الصق نص العقد</label><textarea class="form-control" id="tpText" rows="4"></textarea></div>
+        <div class="d-flex gap-2 mt-3 flex-wrap"><button type="button" class="btn btn-outline-primary" data-a="tpRead">اقرأ الملف</button>
+          <button type="button" class="btn btn-primary" data-a="tpSave" id="tpSave" disabled>حفظ النموذج</button></div>
+        <div class="acc-msg" id="tpMsg" role="status" style="margin:10px 0 0"></div><div id="tpPrev"></div></div>
+      <div class="adm-box"><h6>النماذج المحفوظة</h6><div id="tpList"><p class="text-muted small">جاري التحميل...</p></div></div>`;
+    tplParsed = ''; loadTemplates();
+  }
+  let tplCache = [];
+  async function loadTemplates() {
+    const { data, error } = await sb.from('contract_templates').select('id,title,type_id,file_name,created_at,body').order('created_at', { ascending: false });
+    const box = $('#tpList'); if (!box) return;
+    if (error) { box.innerHTML = `<p class="text-danger small">${esc(errText(error))}</p>`; return; }
+    tplCache = data || [];
+    const tName = (id) => (typesCache.find((x) => x.id === id) || {}).label || 'كل الأنواع';
+    box.innerHTML = tplCache.length ? tplCache.map((x) => `<div class="adm-law" data-tp="${x.id}">
+        <div class="t"><b>${esc(x.title)}</b> <span class="adm-tag">${esc(tName(x.type_id))}</span><small>${esc(x.file_name || 'نص ملصوق')} · عدد الأحرف ${x.body.length}</small></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-a="tpView">عرض</button>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-a="tpDel">حذف</button>
+        <div class="w-100" data-tpbody></div></div>`).join('')
+      : '<p class="text-muted small m-0">ما فيه نماذج للحين.</p>';
+  }
+
+  const confirmBtn = (b, label) => { if (b.dataset.sure === '1') return true; b.dataset.sure = '1'; const o = b.textContent; b.textContent = label; setTimeout(() => { if (b.isConnected) { b.dataset.sure = ''; b.textContent = o; } }, 4000); return false; };
+  const EXTRA = {
+    async saveSettings() {
+      const v = {}; SET_FIELDS.forEach(([k]) => { v[k] = $('#set_' + k).value.trim(); });
+      const { error } = await sb.from('site_settings').upsert({ key: 'site', value: v, updated_at: new Date().toISOString() });
+      if (error) return msg('setMsg', errText(error));
+      siteCfg = v; if (window.applySite) window.applySite(v, null); msg('setMsg', 'انحفظت الإعدادات ✓', true);
+    },
+    async addType() {
+      const label = $('#tyNew').value.trim(); if (!label) return msg('tyMsg', 'اكتب اسم النوع.');
+      const ord = typesCache.reduce((m, x) => Math.max(m, x.ord), 0) + 1;
+      const { error } = await sb.from('contract_types').insert({ label, ord });
+      if (error) return msg('tyMsg', errText(error));
+      $('#tyNew').value = ''; msg('tyMsg', 'انضاف ✓', true); typesChanged();
+    },
+    async tySave(b) {
+      const row = b.closest('[data-ty]'), label = row.querySelector('[data-tylabel]').value.trim();
+      if (!label) return msg('tyMsg', 'الاسم ما يكون فاضي.');
+      const { error } = await sb.from('contract_types').update({ label, active: row.querySelector('[data-tyon]').checked }).eq('id', row.dataset.ty);
+      if (error) return msg('tyMsg', errText(error)); msg('tyMsg', 'انحفظ ✓', true); typesChanged();
+    },
+    async tyDel(b) {
+      if (!confirmBtn(b, 'متأكد؟')) return;
+      const { error } = await sb.from('contract_types').delete().eq('id', b.closest('[data-ty]').dataset.ty);
+      if (error) return msg('tyMsg', errText(error)); typesChanged();
+    },
+    tyUp(b) { return moveType(b, -1); },
+    tyDown(b) { return moveType(b, 1); },
+    async tpRead() {
+      const f = $('#tpFile').files[0]; let text = $('#tpText').value;
+      msg('tpMsg', 'جاري القراءة...', true);
+      try { if (f) text = (await fileText(f)) + '\n' + text; } catch (x) { return msg('tpMsg', errText(x)); }
+      tplParsed = normalize(text);
+      if (!tplParsed) return msg('tpMsg', 'اختر ملف أو الصق النص.');
+      if (!$('#tpTitle').value.trim() && f) $('#tpTitle').value = f.name.replace(/\.[^.]+$/, '');
+      $('#tpSave').disabled = false;
+      $('#tpPrev').innerHTML = `<div class="adm-parsed"><div class="adm-art" style="white-space:pre-wrap">${esc(tplParsed.slice(0, 3000))}${tplParsed.length > 3000 ? '\n…' : ''}</div></div>`;
+      msg('tpMsg', `انقرأ النص، عدد الأحرف ${tplParsed.length}. راجعه ثم احفظ.`, true);
+    },
+    async tpSave() {
+      const title = $('#tpTitle').value.trim(); if (!title) return msg('tpMsg', 'اكتب اسم النموذج.');
+      if (!tplParsed) return msg('tpMsg', 'اقرأ الملف أولاً.');
+      const f = $('#tpFile').files[0];
+      const { error } = await sb.from('contract_templates').insert({ title, type_id: Number($('#tpType').value) || null, file_name: f ? f.name : null, body: tplParsed });
+      if (error) return msg('tpMsg', errText(error));
+      msg('tpMsg', `انحفظ «${title}» ✓`, true);
+      $('#tpTitle').value = ''; $('#tpText').value = ''; $('#tpFile').value = ''; $('#tpPrev').innerHTML = ''; tplParsed = ''; $('#tpSave').disabled = true;
+      loadTemplates();
+    },
+    tpView(b) {
+      const row = b.closest('[data-tp]'), box = row.querySelector('[data-tpbody]');
+      if (box.innerHTML) { box.innerHTML = ''; return; }
+      const x = tplCache.find((t) => String(t.id) === row.dataset.tp);
+      box.innerHTML = `<div class="adm-parsed"><div class="adm-art" style="white-space:pre-wrap">${esc(x ? x.body : '')}</div></div>`;
+    },
+    async tpDel(b) {
+      if (!confirmBtn(b, 'متأكد؟ اضغط للحذف')) return;
+      const { error } = await sb.from('contract_templates').delete().eq('id', b.closest('[data-tp]').dataset.tp);
+      if (error) alert(errText(error)); loadTemplates();
+    },
+  };
+  async function moveType(b, dir) {
+    const i = typesCache.findIndex((x) => String(x.id) === b.closest('[data-ty]').dataset.ty), j = i + dir;
+    if (j < 0 || j >= typesCache.length) return;
+    const A = typesCache[i], B = typesCache[j];
+    const oa = A.ord === B.ord ? i + 1 : A.ord, ob = A.ord === B.ord ? j + 1 : B.ord;
+    await Promise.all([sb.from('contract_types').update({ ord: ob }).eq('id', A.id), sb.from('contract_types').update({ ord: oa }).eq('id', B.id)]);
+    typesChanged();
+  }
+
   // ---------- تشغيل ----------
   window.OQ = { ready: READY, draft, open: () => open(), user: () => st.user, isSub, refresh: () => { st.prof = null; return setUser(st.user); } };
   function boot() {
     mount();
     if (READY) {
       makeClient();
+      loadSite().catch(() => {});
       sb.auth.getSession().then(({ data }) => setUser(data.session ? data.session.user : null));
     }
   }

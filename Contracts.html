@@ -210,6 +210,26 @@ document.addEventListener('DOMContentLoaded', function() {
   const logo = document.getElementById('logoMark');
   const toolbar = document.getElementById('editorToolbar');
   let clickCount = 0, clickTimer = null, currentLang = 'ar', isEditing = false, uiLang = 'ar';
+  const SITE = window.OQ_SITE = {
+    title: 'عقود', subtitle: 'صياغة قانونية فاخرة',
+    disclaimer: 'هذا العقد تم إعداده باجتهاد شخصي وليس صادراً من مكتب محاماة. يُنصح بمراجعته من مختص قبل التوقيع.',
+    wordHeader: 'منصة عقود — كليشة علوية',
+    wordFooter: 'منصة عقود — كليشة سفلية | هذا العقد باجتهاد شخصي وليس من مكتب محاماة',
+    subscribeMsg: 'أضف مفتاح OpenRouter حقك، أو تواصل معنا للاشتراك.'
+  };
+  window.applySite = function (cfg, types) {
+    if (cfg) Object.keys(SITE).forEach(k => { if (typeof cfg[k] === 'string' && cfg[k].trim()) SITE[k] = cfg[k].trim(); });
+    if (uiLang !== 'en') {
+      document.getElementById('appTitle').textContent = SITE.title;
+      document.getElementById('appSubtitle').textContent = SITE.subtitle;
+      document.title = SITE.title + ' — ' + SITE.subtitle;
+    }
+    if (Array.isArray(types) && types.length) {
+      const sel = document.getElementById('contractType'), cur = sel.options[sel.selectedIndex]?.text;
+      sel.innerHTML = types.map(t => `<option value="${t.id}">${escH(t.label)}</option>`).join('');
+      const keep = [...sel.options].find(o => o.text === cur); if (keep) sel.value = keep.value;
+    }
+  };
 
   const T = {
     ar: {
@@ -242,8 +262,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
     document.body.style.direction = lang === 'en' ? 'ltr' : 'rtl';
-    document.getElementById('appTitle').textContent = lang === 'en' ? 'Oqood' : 'عقود';
-    document.getElementById('appSubtitle').textContent = lang === 'en' ? 'Premium Legal Drafting' : 'صياغة قانونية فاخرة';
+    document.getElementById('appTitle').textContent = lang === 'en' ? 'Oqood' : SITE.title;
+    document.getElementById('appSubtitle').textContent = lang === 'en' ? 'Premium Legal Drafting' : SITE.subtitle;
     const map = {
       lblHome:t.home, lblHome2:t.home, lblParties:t.parties, lblP1:t.p1, lblP2:t.p2,
       lblDetails:t.details, lblType:t.type, lblTitle:t.title, lblDate:t.date, lblValue:t.value,
@@ -369,6 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function collectData() {
     return {
       typeLabel: document.getElementById('contractType').options[document.getElementById('contractType').selectedIndex].text,
+      typeId: /^\d+$/.test(document.getElementById('contractType').value) ? document.getElementById('contractType').value : '',
       title: document.getElementById('contractTitle').value,
       date: document.getElementById('contractDate').value,
       value: document.getElementById('contractValue').value,
@@ -446,7 +467,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
       if (useServer) {
         const fmt = (p) => ({ name: p.name, id: p.id, mobile: p.mobile, dob: formatDate(p.dob) });
         const r = await OQ.draft({
-          d: { typeLabel: d.typeLabel, title: d.title, date: formatDate(d.date), valueText: d.value ? d.value + ' ' + currencyText(d.currency) : '',
+          d: { typeId: d.typeId, typeLabel: d.typeLabel, title: d.title, date: formatDate(d.date), valueText: d.value ? d.value + ' ' + currencyText(d.currency) : '',
                userRequest: d.userRequest, extraTerms: d.extraTerms, includeNDA: d.includeNDA, lang: d.lang, p1: fmt(d.p1), p2: fmt(d.p2) },
           uploadedText: uploadedText.substring(0, 2500)
         });
@@ -493,7 +514,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
           <div class="sig-box" style="text-align:right;"><div class="sig-line">توقيع الطرف الأول</div><div>${d.p1.name}</div></div>
           <div class="sig-box" style="text-align:left;"><div class="sig-line">توقيع الطرف الثاني</div><div>${d.p2.name}</div></div>
         </div>
-        <div class="disclaimer">هذا العقد تم إعداده باجتهاد شخصي وليس صادراً من مكتب محاماة. يُنصح بمراجعته من مختص قبل التوقيع.</div>
+        <div class="disclaimer">${escH(SITE.disclaimer)}</div>
       `;
 
       const sb = document.getElementById('sourcesBox');
@@ -533,9 +554,9 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
     const title = document.getElementById('contractTitle').value || 'عقد';
     const safeName = title.replace(/[\\/:*?"<>|]/g,'').trim() || 'عقد';
     const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>${safeName}</title></head><body style="font-family:Amiri,serif;padding:30px;">
-      <div style="text-align:center;font-family:Cairo,sans-serif;font-size:11px;color:#666;margin-bottom:20px;">منصة عقود — كليشة علوية</div>
+      <div style="text-align:center;font-family:Cairo,sans-serif;font-size:11px;color:#666;margin-bottom:20px;">${escH(SITE.wordHeader)}</div>
       ${preview.innerHTML}
-      <div style="text-align:center;font-size:10px;color:#999;margin-top:40px;border-top:1px solid #ddd;padding-top:10px;">منصة عقود — كليشة سفلية | هذا العقد باجتهاد شخصي وليس من مكتب محاماة</div>
+      <div style="text-align:center;font-size:10px;color:#999;margin-top:40px;border-top:1px solid #ddd;padding-top:10px;">${escH(SITE.wordFooter)}</div>
     </body></html>`;
     const blob = new Blob([html], { type: 'application/msword' });
     const a = document.createElement('a');

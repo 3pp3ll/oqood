@@ -3,7 +3,7 @@
 // مفتاح الإدارة يُقرأ من أسرار Supabase (OPENROUTER_KEY) ولا يصل للمتصفح أبداً.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
-const MODEL = Deno.env.get("OPENROUTER_MODEL") || "openai/gpt-4o-mini";
+const DEFAULT_MODEL = Deno.env.get("OPENROUTER_MODEL") || "openai/gpt-4o-mini";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -51,6 +51,21 @@ Deno.serve(async (req) => {
   const sources = (arts || []).map((a, i) => ({
     ref: i + 1, law: a.law_title, kind: a.kind, num: a.num || "", url: a.source_url || "", body: cut(a.body, 1400),
   }));
+  // ---- إعدادات الموقع ونموذج العقد المرجعي (بصلاحية السيرفر) ----
+  const admin = service ? createClient(url, service) : null;
+  let model = DEFAULT_MODEL, tplBlock = "";
+  if (admin) {
+    const { data: st } = await admin.from("site_settings").select("value").eq("key", "site").maybeSingle();
+    const m = st?.value?.model;
+    if (typeof m === "string" && /^[\w.-]+\/[\w.:-]+$/.test(m)) model = m;
+    const typeId = Number(d.typeId) || null;
+    let tq = admin.from("contract_templates").select("title,body,type_id").order("created_at", { ascending: false }).limit(2);
+    tq = typeId ? tq.or(`type_id.eq.${typeId},type_id.is.null`) : tq.is("type_id", null);
+    const { data: tpls } = await tq;
+    const tpl = (tpls || []).sort((a, b) => (b.type_id ? 1 : 0) - (a.type_id ? 1 : 0))[0];
+    if (tpl) tplBlock = `\n\nنموذج مرجعي معتمد من المكتب (${tpl.title}): التزم بأسلوب صياغته وترتيب بنوده ومصطلحاته قدر الإمكان، وكيّفه على بيانات هذا العقد:\n${cut(tpl.body, 7000)}`;
+  }
+
   const srcBlock = sources.length
     ? sources.map((s) => `[${s.ref}] ${s.law} — ${s.num}\n${s.body}`).join("\n\n")
     : "لا توجد مواد مطابقة في المكتبة.";
@@ -67,7 +82,7 @@ Deno.serve(async (req) => {
 - في نهاية العقد أضف قسماً بعنوان "المرجعية النظامية" يسرد المواد التي استندت إليها فعلاً فقط، بصيغة: اسم النظام — رقم المادة. إن لم تستند لأي مادة فلا تضف القسم.
 
 المصادر النظامية:
-${srcBlock}`;
+${srcBlock}${tplBlock}`;
 
   const user = `اكتب عقداً قانونياً كاملاً ورسمياً.
 ${langNote}
@@ -102,7 +117,7 @@ ${body.uploadedText ? "\nنص مرفوع للاستفادة من بنوده:\n" 
         "HTTP-Referer": req.headers.get("origin") || "https://3pp3ll.github.io",
         "X-Title": "Oqood",
       },
-      body: JSON.stringify({ model: MODEL, temperature: 0.2, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
+      body: JSON.stringify({ model, temperature: 0.2, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
     });
   } catch (e) {
     return json({ error: "تعذّر الاتصال بخدمة الصياغة." }, 502);
@@ -116,8 +131,7 @@ ${body.uploadedText ? "\nنص مرفوع للاستفادة من بنوده:\n" 
   const out = await res.json();
   const html = String(out.choices?.[0]?.message?.content || "").replace(/```html|```/g, "").trim();
 
-  if (service) {
-    const admin = createClient(url, service);
+  if (admin) {
     await admin.from("drafts_log").insert({ user_id: u.user.id, plan, title: cut(d.title, 200), sources: sources.length });
   }
   return json({ html, sources: sources.map(({ body, ...s }) => s) });
