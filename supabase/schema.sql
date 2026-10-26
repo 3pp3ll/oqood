@@ -116,6 +116,23 @@ alter table public.drafts_log enable row level security;
 drop policy if exists "log admin read" on public.drafts_log;
 create policy "log admin read" on public.drafts_log for select using (public.is_admin());
 
+-- ============ الصلاحيات (لازمة إذا أُطفئ Automatically expose new tables) ============
+revoke all on public.profiles, public.laws, public.law_articles, public.drafts_log from anon;
+grant select on public.profiles to authenticated;
+grant update (plan, sub_until, name) on public.profiles to authenticated;
+grant select, insert, update, delete on public.laws, public.law_articles to authenticated;
+grant select on public.drafts_log to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
+grant execute on function public.search_articles(text, int) to authenticated;
+grant execute on function public.is_admin() to authenticated;
+revoke execute on function public.search_articles(text, int) from anon, public;
+do $$ begin
+  if exists (select 1 from pg_roles where rolname = 'service_role') then
+    grant insert, select on public.drafts_log to service_role;
+    grant usage, select on all sequences in schema public to service_role;
+  end if;
+end $$;
+
 -- ============ اجعل نفسك المالك ============
 -- بعد ما تسجّل حسابك من صفحة عقود، شغّل هذا السطر بإيميلك:
 -- update public.profiles set is_admin = true, plan = 'sub' where email = 'ايميلك@example.com';
