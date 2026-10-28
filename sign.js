@@ -5,6 +5,8 @@
   const PEN = { blue: '#1d4ed8', black: '#111827', red: '#c0392b' };
   const PEN_N = { blue: 'أزرق', black: 'أسود', red: 'أحمر' };
   const esc = (x) => String(x ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const LEGAL = 'يقر الطرفان بأن توقيعهما الإلكتروني على هذا العقد صادر عنهما بإرادتهما وملزم لهما، وله ما للتوقيع الخطي من حجية وفقاً لنظام التعاملات الإلكترونية الصادر بالمرسوم الملكي رقم (م/18) وتاريخ 8/3/1428هـ، ويُعد هذا العقد وسجل توقيعه دليلاً رقمياً يُحتج به وفقاً لنظام الإثبات الصادر بالمرسوم الملكي رقم (م/43) وتاريخ 26/5/1443هـ.';
+  const LAWYER = 'يوافق الطرفان على إحالة هذا العقد إلى محامٍ لإعادة صياغته بصيغة نظامية والمصادقة عليه، ويحق للمحامي التواصل مع الطرفين للتحقق من صحة بيانات العقد قبل ذلك، ويبقى هذا العقد ملزماً لهما إلى حين ذلك.';
   let S = null;            // { ref, p1, p2, title, lawyer, sig: {1:{img,at,c}, 2:{...}}, done }
   let pad = { p: null, color: 'blue', strokes: [], cur: null };
   const $ = (id) => document.getElementById(id);
@@ -34,7 +36,7 @@
     const box = $('sigBlock'), bar = $('sigBar'); if (!box || !bar) return;
     if (!S) { box.innerHTML = ''; bar.innerHTML = ''; return; }
     const done = both();
-    box.innerHTML = (S.lawyer ? '<p class="sg-lawyer">يوافق الطرفان على إحالة هذا العقد إلى محامٍ لإعادة صياغته بصيغة نظامية والتوقيع عليه بصفة رسمية، ويبقى هذا العقد ملزماً لهما إلى حين ذلك.</p>' : '') +
+    box.innerHTML = '<p class="sg-lawyer">' + LEGAL + '</p>' + (S.lawyer ? '<p class="sg-lawyer sg-l2">' + LAWYER + '</p>' : '') +
       '<div class="sg-grid">' + party(1, 'الطرف الأول', S.p1) + party(2, 'الطرف الثاني', S.p2) + '</div>' +
       '<div class="sg-foot">رقم العقد: <b dir="ltr">' + esc(S.ref) + '</b>' + (done ? ' · وُقّع من الطرفين: ' + esc(S.doneAt || '') : '') + '</div>';
     const st = done ? '<span class="sg-ok">✓ وقّع الطرفين، والعقد مقفل عن التعديل</span>' : S.sig[1] || S.sig[2] ? 'بانتظار توقيع ' + (S.sig[1] ? 'الطرف الثاني' : 'الطرف الأول') : 'بانتظار توقيع الطرفين';
@@ -63,9 +65,15 @@
     document.body.appendChild(ov);
     const cv = $('sgCv'), ctx = cv.getContext('2d');
     const pos = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-    cv.addEventListener('pointerdown', (e) => { cv.setPointerCapture(e.pointerId); pad.cur = { c: pad.color, pts: [pos(e)] }; draw(); });
-    cv.addEventListener('pointermove', (e) => { if (!pad.cur) return; pad.cur.pts.push(pos(e)); draw(); });
-    const end = () => { if (pad.cur) { pad.strokes.push(pad.cur); pad.cur = null; draw(); } };
+    // قلم التوقيع: سماكة الخط حسب ضغط القلم، وتجاهل لمس الكف أثناء استخدامه
+    const pt = (e) => { const q = pos(e); if (e.pointerType === 'pen') q.push(1.2 + Math.min(1, e.pressure || 0.5) * 3); return q; };
+    cv.addEventListener('pointerdown', (e) => {
+      if (pad.cur) return;
+      if (e.pointerType === 'pen') pad.penAt = Date.now(); else if (e.pointerType === 'touch' && pad.penAt && Date.now() - pad.penAt < 4000) return;
+      try { cv.setPointerCapture(e.pointerId); } catch (x) {} pad.cur = { c: pad.color, id: e.pointerId, pen: e.pointerType === 'pen', pts: [pt(e)] }; draw();
+    });
+    cv.addEventListener('pointermove', (e) => { if (!pad.cur || e.pointerId !== pad.cur.id) return; if (pad.cur.pen) pad.penAt = Date.now(); ((e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e]).forEach((x) => pad.cur.pts.push(pt(x))); draw(); });
+    const end = (e) => { if (pad.cur && e.pointerId === pad.cur.id) { pad.strokes.push(pad.cur); pad.cur = null; draw(); } };
     cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
     ov.addEventListener('click', (e) => {
       if (e.target === ov) return closePad();
@@ -76,7 +84,9 @@
     window.addEventListener('resize', () => { if (!ov.hidden) size(); });
   }
   function size() { const cv = $('sgCv'), r = cv.getBoundingClientRect(), k = window.devicePixelRatio || 1; cv.width = r.width * k; cv.height = r.height * k; cv.getContext('2d').setTransform(k, 0, 0, k, 0, 0); draw(); }
-  function strokeAll(g, strokes) { g.lineCap = 'round'; g.lineJoin = 'round'; strokes.forEach((s) => { g.strokeStyle = PEN[s.c]; g.lineWidth = 2.6; g.beginPath(); s.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); if (s.pts.length === 1) g.lineTo(s.pts[0][0] + 0.1, s.pts[0][1]); g.stroke(); }); }
+  function strokeAll(g, strokes) { g.lineCap = 'round'; g.lineJoin = 'round'; strokes.forEach((s) => { g.strokeStyle = PEN[s.c]; g.lineWidth = 2.6;
+    if (s.pen && s.pts.length > 1) { for (let i = 1; i < s.pts.length; i++) { g.lineWidth = (s.pts[i - 1][2] + s.pts[i][2]) / 2; g.beginPath(); g.moveTo(s.pts[i - 1][0], s.pts[i - 1][1]); g.lineTo(s.pts[i][0], s.pts[i][1]); g.stroke(); } return; }
+    g.beginPath(); s.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); if (s.pts.length === 1) g.lineTo(s.pts[0][0] + 0.1, s.pts[0][1]); g.stroke(); }); }
   function draw() { const cv = $('sgCv'), g = cv.getContext('2d'); g.clearRect(0, 0, cv.width, cv.height); strokeAll(g, pad.strokes.concat(pad.cur ? [pad.cur] : [])); }
   function openPad(p) {
     ensurePad(); pad.p = p; pad.strokes = []; pad.cur = null;
@@ -121,7 +131,8 @@
     load(st, o) { S = st && st.ref ? st : null; if (!S && o) return this.reset(o); paint(); },
     state() { return S ? JSON.parse(JSON.stringify(S)) : null; },
     html() { const b = $('sigBlock'); return b ? b.innerHTML : ''; },
-    signed: () => !!both()
+    signed: () => !!both(),
+    LEGAL, LAWYER
   };
   document.addEventListener('click', (e) => {
     const b = e.target.closest && e.target.closest('[data-sg]'); if (b && S && !both()) { e.preventDefault(); openPad(b.dataset.sg); return; }
