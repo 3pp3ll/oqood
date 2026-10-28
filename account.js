@@ -467,6 +467,9 @@
     ['wordFooter', 'الكليشة السفلية في ملف Word', 'input', ''],
     ['subscribeMsg', 'رسالة الاشتراك لغير المشتركين', 'textarea', 'مثال: للاشتراك تواصل واتساب 05xxxxxxxx'],
     ['model', 'نموذج الذكاء الاصطناعي (OpenRouter)', 'input', 'openai/gpt-4o-mini'],
+    ['lawyerName', 'اسم المحامي (لإرسال العقود الموقّعة)', 'input', 'مثال: مكتب فلان للمحاماة'],
+    ['lawyerWhatsapp', 'واتساب المحامي (بالصيغة الدولية)', 'input', '9665xxxxxxxx'],
+    ['lawyerEmail', 'إيميل المحامي', 'input', 'lawyer@example.com'],
   ];
   let siteCfg = {}, typesCache = [];
   async function loadSite() {
@@ -483,7 +486,7 @@
     $('#admBody').innerHTML = `<div class="adm-box"><h6>إعدادات الموقع</h6>
       ${SET_FIELDS.map(([k, label, kind, ph]) => `<div class="mb-3"><label class="form-label" for="set_${k}">${label}</label>
         ${kind === 'textarea' ? `<textarea class="form-control" id="set_${k}" rows="2" placeholder="${esc(ph)}">${esc(S[k] || '')}</textarea>`
-          : `<input class="form-control" id="set_${k}" ${k === 'model' ? 'dir="ltr"' : ''} placeholder="${esc(ph)}" value="${esc(S[k] || '')}">`}</div>`).join('')}
+          : `<input class="form-control" id="set_${k}" ${['model', 'lawyerWhatsapp', 'lawyerEmail'].includes(k) ? 'dir="ltr"' : ''} placeholder="${esc(ph)}" value="${esc(S[k] || '')}">`}</div>`).join('')}
       <p class="adm-hint" style="margin:-6px 0 12px">النموذج يُكتب بصيغة OpenRouter مثل <span dir="ltr">openai/gpt-4o-mini</span> أو <span dir="ltr">anthropic/claude-sonnet-4.5</span>. اتركه فاضي للافتراضي.</p>
       <button type="button" class="btn btn-primary" data-a="saveSettings">حفظ الإعدادات</button>
       <div class="acc-msg" id="setMsg" role="status" style="margin:10px 0 0"></div></div>`;
