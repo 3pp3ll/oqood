@@ -333,6 +333,36 @@
   }
 
   const loadScript = (src) => new Promise((res, rej) => { if (document.querySelector(`script[src="${src}"]`)) return res(); const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('تعذّر تحميل أداة قراءة الملف.')); document.head.appendChild(s); });
+  // نص PDF: بعض ملفات الأنظمة العربية كل حرف فيها قطعة لحالها، فنجمع الحروف حسب المسافة الفعلية بينها بدل ما نحط مسافة بين كل حرف
+  function pdfItemsText(items) {
+    let out = '', prev = null;
+    for (const it of items) {
+      if (!it.str) { if (it.hasEOL) { out += '\n'; prev = null; } continue; }
+      const tr = it.transform || [1, 0, 0, 1, 0, 0], x = tr[4], y = tr[5], h = Math.hypot(tr[2], tr[3]) || it.height || 10, w = it.width || 0;
+      if (prev) {
+        if (Math.abs(y - prev.y) > h * 0.5) out += '\n';
+        else {
+          const gap = Math.min(Math.abs(prev.x - (x + w)), Math.abs(x - (prev.x + prev.w)));
+          if (gap > h * 0.15 && !/\s$/.test(out) && !/^\s/.test(it.str)) out += ' ';
+        }
+      }
+      out += it.str; prev = { x, y, w, h };
+      if (it.hasEOL) { out += '\n'; prev = null; }
+    }
+    return out;
+  }
+  function fixArabic(t) {
+    t = String(t).normalize('NFKC');
+    // سطر كله حروف مفرّقة بمسافات (ملف بدون مواقع دقيقة): نلصق الحروف ونخلي المسافة المزدوجة فاصل كلمات
+    t = t.split('\n').map((ln) => {
+      const tok = ln.trim().split(/ +/); if (tok.length < 6) return ln;
+      const single = tok.filter((x) => /^[\u0621-\u064A\u0660-\u0669]$/.test(x)).length;
+      if (single / tok.length < 0.6) return ln;
+      return ln.split(/ {2,}/).map((w) => w.replace(/ (?=\S)/g, '')).join(' ');
+    }).join('\n');
+    // «ى» في وسط الكلمة أكيد «ي»
+    return t.replace(/ى(?=[\u0621-\u064A])/g, 'ي');
+  }
   async function fileText(file) {
     const name = file.name.toLowerCase();
     if (name.endsWith('.pdf')) {
@@ -340,11 +370,8 @@
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
       let t = '';
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const c = await (await pdf.getPage(i)).getTextContent();
-        t += c.items.map((it) => it.str + (it.hasEOL ? '\n' : ' ')).join('') + '\n\n';
-      }
-      return t;
+      for (let i = 1; i <= pdf.numPages; i++) t += pdfItemsText((await (await pdf.getPage(i)).getTextContent()).items) + '\n\n';
+      return fixArabic(t);
     }
     if (name.endsWith('.docx')) {
       await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
