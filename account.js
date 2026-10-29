@@ -53,6 +53,7 @@
   const errText = (e) => {
     const m = String((e && e.message) || e || '');
     if (/Invalid login/i.test(m)) return 'الإيميل أو كلمة المرور غير صحيحة.';
+    if (/Could not find the table|schema cache|does not exist/i.test(m)) return 'جدول ناقص في قاعدة البيانات. شغّل ملف schema.sql كامل في Supabase ← SQL Editor (آمن لإعادة التشغيل).';
     if (/not confirmed/i.test(m)) return 'أكّد إيميلك من الرابط اللي وصلك، بعدها سجّل دخولك.';
     if (/already registered|already been registered/i.test(m)) return 'هذا الإيميل مسجّل. سجّل دخولك أو استعد كلمة المرور.';
     if (/at least|Password should/i.test(m)) return 'كلمة المرور لازم تكون ٨ أحرف أو أكثر.';
@@ -357,6 +358,65 @@
     return raw;
   }
 
+  // ---------- قراءة العقود المصوّرة ----------
+  const isImg = (f) => /^image\//.test(f.type) || /\.(jpe?g|png|webp|heic)$/i.test(f.name);
+  function toJpeg(src, maxSide) {
+    const k = Math.min(1, maxSide / Math.max(src.width, src.height));
+    const c = document.createElement('canvas'); c.width = Math.round(src.width * k); c.height = Math.round(src.height * k);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(src, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.82);
+  }
+  async function imgFile(f) {
+    const url = URL.createObjectURL(f);
+    try { const im = new Image(); im.src = url; await im.decode(); return toJpeg(im, 1800); }
+    catch (e) { throw new Error('ما قدرت أفتح الصورة ' + f.name + ' (لو صيغتها HEIC حوّلها JPG).'); }
+    finally { URL.revokeObjectURL(url); }
+  }
+  async function pdfPages(f) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const pdf = await window.pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise, out = [];
+    for (let i = 1; i <= Math.min(pdf.numPages, 30); i++) {
+      const pg = await pdf.getPage(i), v = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: 1700 / Math.max(v.width, v.height) });
+      const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+      await pg.render({ canvasContext: c.getContext('2d'), viewport: vp, background: '#ffffff' }).promise;
+      out.push(toJpeg(c, 1800));
+    }
+    return out;
+  }
+  async function ocrPages(images, onStep) {
+    const parts = [];
+    for (let i = 0; i < images.length; i += 4) {
+      const batch = images.slice(i, i + 4);
+      onStep(i + 1, Math.min(i + 4, images.length), images.length);
+      const { data, error } = await sb.functions.invoke('ocr', { body: { images: batch } });
+      if (error) {
+        let m = error.message || '';
+        try { const j = await error.context.json(); if (j && j.error) m = j.error; } catch (x) {}
+        if (/not found|404|Failed to send|FunctionsFetchError|FunctionsRelayError/i.test(m + ' ' + (error.name || ''))) m = 'دالة القراءة (ocr) مو منشورة في Supabase للحين.';
+        throw new Error(m);
+      }
+      parts.push(data.text);
+    }
+    return parts.join('\n\n');
+  }
+  async function readUpload(files, step) {
+    files = [...files].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    const imgs = files.filter(isImg), docs = files.filter((f) => !isImg(f));
+    let text = '', pages = [];
+    for (const f of docs) {
+      const t = await fileText(f);
+      if (/\.pdf$/i.test(f.name)) {
+        const pdf = await window.pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
+        if (t.replace(/\s+/g, '').length < 150 * pdf.numPages) { pages = pages.concat(await pdfPages(f)); continue; }   // PDF مصوّر
+      }
+      text += t + '\n\n';
+    }
+    for (const f of imgs) pages.push(await imgFile(f));
+    if (pages.length) text += await ocrPages(pages, step);
+    return text;
+  }
+
   function showParsed() {
     const box = $('#lwParsed');
     $('#lwSave').disabled = !parsed.length;
@@ -468,6 +528,7 @@
     ['wordFooter', 'الكليشة السفلية في ملف Word', 'input', ''],
     ['subscribeMsg', 'رسالة الاشتراك لغير المشتركين', 'textarea', 'مثال: للاشتراك تواصل واتساب 05xxxxxxxx'],
     ['model', 'نموذج الذكاء الاصطناعي (OpenRouter)', 'input', 'openai/gpt-4o-mini'],
+    ['ocrModel', 'نموذج قراءة العقود المصوّرة (OpenRouter)', 'input', 'google/gemini-2.5-flash'],
     ['lawyerName', 'اسم المحامي (لإرسال العقود الموقّعة)', 'input', 'مثال: مكتب فلان للمحاماة'],
     ['lawyerWhatsapp', 'واتساب المحامي (بالصيغة الدولية)', 'input', '9665xxxxxxxx'],
     ['lawyerEmail', 'إيميل المحامي', 'input', 'lawyer@example.com'],
@@ -487,7 +548,7 @@
     $('#admBody').innerHTML = `<div class="adm-box"><h6>إعدادات الموقع</h6>
       ${SET_FIELDS.map(([k, label, kind, ph]) => `<div class="mb-3"><label class="form-label" for="set_${k}">${label}</label>
         ${kind === 'textarea' ? `<textarea class="form-control" id="set_${k}" rows="2" placeholder="${esc(ph)}">${esc(S[k] || '')}</textarea>`
-          : `<input class="form-control" id="set_${k}" ${['model', 'lawyerWhatsapp', 'lawyerEmail'].includes(k) ? 'dir="ltr"' : ''} placeholder="${esc(ph)}" value="${esc(S[k] || '')}">`}</div>`).join('')}
+          : `<input class="form-control" id="set_${k}" ${['model', 'ocrModel', 'lawyerWhatsapp', 'lawyerEmail'].includes(k) ? 'dir="ltr"' : ''} placeholder="${esc(ph)}" value="${esc(S[k] || '')}">`}</div>`).join('')}
       <p class="adm-hint" style="margin:-6px 0 12px">النموذج يُكتب بصيغة OpenRouter مثل <span dir="ltr">openai/gpt-4o-mini</span> أو <span dir="ltr">anthropic/claude-sonnet-4.5</span>. اتركه فاضي للافتراضي.</p>
       <button type="button" class="btn btn-primary" data-a="saveSettings">حفظ الإعدادات</button>
       <div class="acc-msg" id="setMsg" role="status" style="margin:10px 0 0"></div></div>`;
@@ -535,7 +596,8 @@
           <div><label class="form-label" for="tpTitle">اسم النموذج <span class="req">*</span></label><input class="form-control" id="tpTitle" placeholder="مثال: عقد إيجار سكني — نموذج المكتب"></div>
           <div><label class="form-label" for="tpType">نوع العقد</label><select class="form-select" id="tpType">${typeOptions('')}</select></div>
         </div>
-        <div class="mt-3"><label class="form-label" for="tpFile">الملف (Word أو PDF أو نص)</label><input type="file" class="form-control" id="tpFile" accept=".pdf,.docx,.txt,.html,.htm"></div>
+        <div class="mt-3"><label class="form-label" for="tpFile">الملف: Word أو PDF، أو صور صفحات العقد (سكانر أو جوال)</label><input type="file" class="form-control" id="tpFile" multiple accept=".pdf,.docx,.txt,.html,.htm,image/*">
+          <p class="adm-hint" style="margin:6px 0 0">للصور: اختر كل صفحات العقد مرة وحدة ومرقّمة بالترتيب (1، 2، 3...). العقد المصوّر يقراه الذكاء الاصطناعي ويخفي البيانات الشخصية.</p></div>
         <div class="mt-3"><label class="form-label" for="tpText">أو الصق نص العقد</label><textarea class="form-control" id="tpText" rows="4"></textarea></div>
         <div class="d-flex gap-2 mt-3 flex-wrap"><button type="button" class="btn btn-outline-primary" data-a="tpRead">اقرأ الملف</button>
           <button type="button" class="btn btn-primary" data-a="tpSave" id="tpSave" disabled>حفظ النموذج</button></div>
@@ -587,9 +649,12 @@
     tyUp(b) { return moveType(b, -1); },
     tyDown(b) { return moveType(b, 1); },
     async tpRead() {
-      const f = $('#tpFile').files[0]; let text = $('#tpText').value;
+      const files = $('#tpFile').files, f = files[0]; let text = $('#tpText').value;
+      const btn = document.querySelector('[data-a="tpRead"]'); if (btn) btn.disabled = true;
       msg('tpMsg', 'جاري القراءة...', true);
-      try { if (f) text = (await fileText(f)) + '\n' + text; } catch (x) { return msg('tpMsg', errText(x)); }
+      try { if (files.length) text = (await readUpload(files, (a, b, n) => msg('tpMsg', n > 1 ? `جاري قراءة الصفحات ${a}-${b} من ${n} بالذكاء الاصطناعي... (تاخذ دقيقة تقريباً)` : 'جاري قراءة الصفحة بالذكاء الاصطناعي...', true))) + '\n' + text; }
+      catch (x) { if (btn) btn.disabled = false; return msg('tpMsg', errText(x)); }
+      if (btn) btn.disabled = false;
       tplParsed = normalize(text);
       if (!tplParsed) return msg('tpMsg', 'اختر ملف أو الصق النص. (لو الـ PDF صور ممسوحة ما ينقرأ، الصق النص بدالها)');
       const mk = maskPII(tplParsed); tplParsed = mk.t;
