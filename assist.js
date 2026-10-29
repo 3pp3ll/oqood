@@ -51,7 +51,7 @@
     const msgs = cur ? cur.msgs : [];
     box.innerHTML = msgs.length ? msgs.map((m) => '<div class="oq-m ' + (m.r === 'u' ? 'u' : 'a') + (m.err ? ' err' : '') + '">' + fmt(m.c) + (m.done ? '<div class="oq-done">✓ ' + esc(m.done) + '</div>' : '') + '</div>').join('') +
       (busy ? '<div class="oq-m a oq-typing"><span></span><span></span><span></span></div>' : '')
-      : '<div class="oq-empty"><b>هلا 👋</b><p>اسألني عن المنصة أو العقود. وإذا تبي نوع عقد مو موجود في القائمة، مثل «عقد استثمار»، أضيفه لك.</p>' +
+      : '<div class="oq-empty"><b>هلا 👋</b><p>أنا مساعد المنصة ودعمها الفني. اسألني عن أي خطوة، أو اطلب عقد مثل «عقد استثمار» وأطلّع لك مسودته يمين الشاشة.</p>' +
         ['كيف أرسل رابط توقيع للعميل؟', 'أبغى عقد استثمار', 'وش الفرق بين عقد المقاولة وعقد الخدمات؟'].map((s) => '<button type="button" class="oq-sug" data-ask="sug">' + esc(s) + '</button>').join('') + '</div>';
     box.scrollTop = box.scrollHeight;
   }
@@ -92,14 +92,19 @@
     const sb = window.OQ && OQ.sb && OQ.sb();
     let rep = { r: 'a', c: '' };
     try {
-      if (!sb) throw new Error('سجّل دخولك أول.');
+      if (!sb || !(OQ.isIn && OQ.isIn())) { busy = false; cur.msgs.push({ r: 'a', c: 'سجّل دخولك أول من أيقونة الحساب فوق، وبعدها اسألني اللي تبي 👌' }); save(chats); paint(); if (OQ.open) OQ.open(); return; }
       const types = [...document.querySelectorAll('#contractType option')].map((o) => o.text);
       const { data, error } = await sb.functions.invoke('draft', { body: { mode: 'assist', messages: cur.msgs.slice(-12).map((m) => ({ role: m.r === 'u' ? 'user' : 'assistant', content: m.c })), ctx: { types } } });
       if (error) { let m = error.message; try { const j = await error.context.json(); if (j && j.error) m = j.error; } catch (x) {} throw new Error(m); }
       rep.c = data.reply || '…';
-      const done = [];
-      for (const a of data.actions || []) if (a.type === 'add_type') done.push(await addType(sb, a));
-      if (done.length) rep.done = done.join('، ') + ' — طلبك جاهز، حدّث الصفحة عشان يطلع في القائمة.';
+      const done = [], acts = data.actions || [];
+      for (const a of acts) if (a.type === 'add_type') done.push(await addType(sb, a));
+      if (done.length && window.OQ && OQ.reloadTypes) { try { await OQ.reloadTypes(); } catch (x) {} }
+      const at = acts.find((a) => a.type === 'add_type'); if (at) pickType(at.label);
+      const sc = acts.find((a) => a.type === 'show_contract');
+      if (sc) { showDraft(sc); done.push('ظهرت مسودة «' + sc.title + '» يمين الشاشة. اضغط «اعتمدها» وعبّي بيانات الأطراف عشان يطلع العقد والتوقيع'); }
+      else if (at) done.push('النوع صار في القائمة ومختار لك');
+      if (done.length) rep.done = done.join('. ') + '.';
     } catch (e) {
       rep = { r: 'a', c: /mode|assist/.test(e.message || '') ? 'المساعد يحتاج نشر دالة draft الجديدة في Supabase.' : 'ما قدرت أرد الحين: ' + (e.message || e), err: true };
     }
@@ -113,7 +118,49 @@
     let { error } = await sb.from('contract_types').insert({ label: a.label, grp: a.grp, law: a.law, ord, active: true });
     if (error && /grp|law|column/.test(error.message)) ({ error } = await sb.from('contract_types').insert({ label: a.label, ord, active: true }));
     if (error) throw new Error('ما قدرت أضيف «' + a.label + '»: ' + error.message);
+    const { data: chk } = await sb.from('contract_types').select('id,active').eq('label', a.label).limit(1);
+    if (chk && chk[0] && chk[0].active === false) await sb.from('contract_types').update({ active: true }).eq('id', chk[0].id);
     return 'انضاف «' + a.label + '» في ' + a.grp;
+  }
+
+  /* ---------- مسودة العقد يمين الشاشة ---------- */
+  function pickType(label) {
+    const sel = $('#contractType'); if (!sel) return false;
+    const n = (x) => String(x || '').replace(/\s+/g, ' ').trim();
+    const o = [...sel.options].find((x) => n(x.text) === n(label)) || [...sel.options].find((x) => n(label) && (n(x.text).includes(n(label)) || n(label).includes(n(x.text).replace(/^عقد /, ''))));
+    if (o) { sel.value = o.value; sel.dispatchEvent(new Event('change', { bubbles: true })); return true; }
+    return false;
+  }
+  let draft = null;
+  function showDraft(d) {
+    draft = d;
+    let box = $('#oqDraft');
+    if (!box) { box = document.createElement('aside'); box.id = 'oqDraft'; box.className = 'oq-draft no-print'; box.dir = 'rtl'; box.setAttribute('aria-label', 'مسودة العقد'); document.body.appendChild(box); box.addEventListener('click', onDraft); }
+    box.classList.remove('min');
+    box.innerHTML = '<header><button type="button" class="oq-d-t" data-dr="min" aria-expanded="true">📄 <b>' + esc(d.title) + '</b><small>مسودة بدون بيانات</small></button><button type="button" data-dr="close" aria-label="إغلاق المسودة">✕</button></header>' +
+      '<div class="oq-d-body">' + d.clauses.map((c) => (c.h ? '<h4>' + esc(c.h) + '</h4>' : '') + (c.t ? '<p>' + esc(c.t).replace(/\n/g, '<br>') + '</p>' : '')).join('') + '</div>' +
+      '<footer><button type="button" class="oq-d-use" data-dr="use">✓ اعتمدها وعبّي الأطراف</button><button type="button" data-dr="copy">نسخ</button></footer>';
+  }
+  function draftText() { return draft ? draft.clauses.map((c) => (c.h ? c.h + '\n' : '') + (c.t || '')).join('\n\n') : ''; }
+  async function onDraft(e) {
+    const b = e.target.closest('[data-dr]'); if (!b) return;
+    const box = $('#oqDraft'), a = b.dataset.dr;
+    if (a === 'close') { box.remove(); return; }
+    if (a === 'min') { box.classList.toggle('min'); b.setAttribute('aria-expanded', String(!box.classList.contains('min'))); return; }
+    if (a === 'copy') { try { await navigator.clipboard.writeText(draftText()); b.textContent = 'تم النسخ ✓'; } catch (x) {} return; }
+    if (a === 'use') {
+      window.OQ_TPL = draftText();
+      if (!pickType(draft.type_label) && window.OQ && OQ.reloadTypes) { try { await OQ.reloadTypes(); } catch (x) {} pickType(draft.type_label); }
+      const t = $('#contractTitle'); if (t && !t.value.trim()) t.value = draft.title;
+      const ur = $('#userRequest'); if (ur && !ur.value.trim()) ur.value = 'أبغى ' + draft.title + ' حسب المسودة المعتمدة من المساعد.';
+      const f = $('#formSection'), pv = $('#previewSection'); if (f) f.style.display = 'block'; if (pv) pv.style.display = 'none';
+      box.classList.add('min'); close();
+      let n = $('#oqFillNote');
+      if (!n) { n = document.createElement('div'); n.id = 'oqFillNote'; n.className = 'oq-fill no-print'; n.setAttribute('role', 'status'); const anchor = f && f.querySelector('.section-title'); if (anchor) anchor.insertAdjacentElement('afterend', n); }
+      n.innerHTML = '📝 المسودة «' + esc(draft.title) + '» معتمدة. قم بتعبئة بيانات الأطراف، بعدها اضغط «صياغة قانونية» عشان يطلع العقد والتوقيع. <button type="button" aria-label="إخفاء" onclick="this.parentNode.remove()">✕</button>';
+      (f || document.body).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => { const p1 = document.querySelector('#formSection input'); if (p1) p1.focus({ preventScroll: true }); }, 500);
+    }
   }
 
   /* ---------- البحث أعلى الصفحة ---------- */
@@ -161,9 +208,9 @@
 
   function boot() {
     ui(); searchUI();
-    const show = () => { const f = $('#oqAskFab'); if (f) f.hidden = !(window.OQ && OQ.isAdmin && OQ.isAdmin()); };
+    const show = () => { const f = $('#oqAskFab'); if (f) f.hidden = false; };
     show(); let n = 0; const t = setInterval(() => { show(); if (++n > 60) clearInterval(t); }, 500);
-    window.OQAsk = { open, refresh: show };
+    window.OQAsk = { open, refresh: show, showDraft };
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

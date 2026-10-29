@@ -8,7 +8,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <link rel="stylesheet" href="account.css?v=20261029h">
-<link rel="stylesheet" href="assist.css?v=20261029i">
+<link rel="stylesheet" href="assist.css?v=20261029j">
 <link rel="stylesheet" href="sign.css?v=20261029d">
 <style>
 :root{--navy:#0f2744;--gold:#c9a84c;--ink:#1a2332;--muted:#5c6b7a;--line:#e2ddd4;}
@@ -455,6 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (fileInput.files && fileInput.files[0]) {
       try { uploadedText = await fileInput.files[0].text(); } catch(e) {}
     }
+    if (!uploadedText && window.OQ_TPL) uploadedText = 'مسودة بنود اعتمدها المستخدم من المساعد: التزم بموادها وترتيبها وكيّفها على بيانات الأطراف والقيمة:\n' + window.OQ_TPL;
 
     const langNote = d.lang === 'en' ? 'اكتب العقد بالإنجليزية فقط.' :
                      d.lang === 'both' ? 'اكتب العقد بتنسيق جدول ثنائي: العربي في العمود الأيمن والإنجليزي في العمود الأيسر. استخدم <table class="bilingual-table"><tr><td class="ar">...</td><td class="en">...</td></tr></table> لكل مادة. لا تكتب قسم التوقيعات ولا خطوط التوقيع، المنصة تضيفها.' :
@@ -476,7 +477,7 @@ ${langNote}
 
 ${d.extraTerms ? 'شروط إضافية: '+d.extraTerms : ''}
 ${d.includeNDA ? 'أضف قسم اتفاقية سرية مناسب.' : ''}
-${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substring(0,2500) : ''}
+${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substring(0,6000) : ''}
 
 المطلوب:
 - صياغة قانونية رسمية متكاملة.
@@ -491,7 +492,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
         const r = await OQ.draft({
           d: { typeId: d.typeId, typeLabel: d.typeLabel, typeLaw: d.typeLaw, title: d.title, date: formatDate(d.date), valueText: d.value ? d.value + ' ' + currencyText(d.currency) : '',
                userRequest: d.userRequest, extraTerms: d.extraTerms, includeNDA: d.includeNDA, lang: d.lang, p1: fmt(d.p1), p2: fmt(d.p2) },
-          uploadedText: uploadedText.substring(0, 2500)
+          uploadedText: uploadedText.substring(0, 6000)
         });
         text = String(r.html || '').replace(/```html|```/g,'').trim();
         sources = r.sources || [];
@@ -654,8 +655,8 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="editor.js?v=20261029e"></script>
-<script src="account.js?v=20261029i"></script>
-<script src="assist.js?v=20261029i"></script>
+<script src="account.js?v=20261029j"></script>
+<script src="assist.js?v=20261029j"></script>
 <script src="pdf.js?v=20261029d"></script>
 <script src="sign.js?v=20261029d"></script>
 </body>

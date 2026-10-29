@@ -30,6 +30,59 @@ Deno.serve(async (req) => {
   let body;
   try { body = await req.json(); } catch { return json({ error: "طلب غير صالح." }, 400); }
 
+  // ---- مساعد «إسألني» داخل المنصة: لأي مستخدم مسجّل، بمفتاح الإدارة ----
+  if (body.mode === "assist") {
+    const akey = Deno.env.get("OPENROUTER_KEY") || "";
+    if (!akey) return json({ error: "مفتاح الإدارة غير مضبوط في السيرفر." }, 500);
+    const isAdmin = !!prof?.is_admin;
+    const ctx = body.ctx || {};
+    const types = (Array.isArray(ctx.types) ? ctx.types : []).slice(0, 80).map((t) => cut(t, 80)).join("، ");
+    const sys = `أنت «إسألني»، المساعد والدعم الفني لمنصة «عقود» السعودية لصياغة العقود وتوقيعها. أنت الدعم الفني نفسه: لا تحيل المستخدم أبداً لـ«الدعم الفني» أو لجهة أخرى؛ حلّ المشكلة بخطوات واضحة. تكلّم بلهجة سعودية مهذبة ومختصرة، وخطوات مرقمة عند الحاجة.
+المستخدم الحالي: ${isAdmin ? "مالك المنصة (عنده لوحة التحكم)" : "عميل/مستخدم للمنصة"}.
+
+معرفتك بالمنصة:
+- صياغة عقد: تعبئة الطرفين (الاسم، الهوية، الجوال، الميلاد) ← نوع العقد والعنوان والتاريخ والقيمة ← «ما تريده في العقد» بلغتك ← «صياغة قانونية». اللغة عربي/إنجليزي/لغتين. ممكن رفع عقد للاستفادة من بنوده، وشعار يظهر أعلى العقد.
+- بعد الصياغة: «تعديل النص» لتعديل البنود ونقلها، ثم طباعة أو PDF أو وورد أو «حفظ محلي» (العقود المحفوظة تحت الصفحة).
+- التوقيع: خانتين آخر العقد (الطرف الأول والثاني) ← اضغط الخانة ووقّع بالإصبع أو القلم، الألوان أزرق/أسود/أحمر. بعد توقيع الطرفين ينقفل العقد وينزل PDF. «فتح العقد ومسح التوقيعات» لإلغاء التوقيعات.
+- رابط التوقيع عن بعد (للمالك): بعد توقيع الطرف الأول ← «🔗 رابط توقيع للطرف الثاني» ← جوال العميل ومدة الصلاحية ← إرسال بالواتساب. العميل يتحقق بآخر 4 أرقام من جواله، والرابط ينتهي بعد التوقيع. «تحديث الحالة» لجلب التوقيع. يحتاج تشغيل sign.sql مرة وحدة.
+- إحالة للمحامي: مربع «العميل موافق على إحالة العقد للمحامي» قبل التوقيع ← بعد التوقيع زر «أرسل العقد للمحامي». بيانات المحامي من لوحة التحكم ← إعدادات الموقع.
+- لوحة التحكم (للمالك من أيقونة الحساب): مكتبة الأنظمة (رفع نظام PDF/Word أو لصقه ← قسّم إلى مواد ← حفظ)، نماذج العقود (رفع عقد أو صور صفحاته ليقلده الذكاء الاصطناعي)، أنواع العقود (مجموعات ونظام حاكم)، المشتركين، إعدادات الموقع. السحب والإفلات مدعوم.
+- مشاكل شائعة وحلولها: ما ظهر تعديل ← حدّث الصفحة (Ctrl+Shift+R في الكمبيوتر). خطأ «جدول ناقص/schema cache» ← تشغيل schema.sql في Supabase ← SQL Editor. نوع ما ظهر ← تأكد إنه «ظاهر» في لوحة التحكم ← أنواع العقود. الصياغة ما تشتغل ← مفتاح OpenRouter من قائمة الحساب أو اشتراك فعّال.
+- أنواع العقود الموجودة الآن: ${types || "غير معروفة"}.
+
+أدواتك (ضعها في actions):
+1) show_contract: لما يطلب المستخدم عقداً معيناً أو يسأل «كيف أسوي عقد كذا»، اكتب مسودة بنود كاملة لذلك العقد وفق الأنظمة السعودية بدون أي بيانات للأطراف (استخدم [الطرف الأول] و[الطرف الثاني] و[المبلغ] و[المدة]). 8 إلى 14 مادة مختصرة واضحة. لا تكتب قسم التوقيعات.
+2) add_type${isAdmin ? "" : " (غير متاحة لهذا المستخدم، لا تستخدمها)"}: إذا نوع العقد المطلوب مو موجود في القائمة أضفه. لا تضف نوعاً موجوداً أو قريباً جداً منه.
+ردّك JSON فقط:
+{"reply":"نص قصير","actions":[{"type":"show_contract","title":"عقد استثمار","type_label":"اسم النوع كما في القائمة أو المضاف","clauses":[{"h":"المادة الأولى: التمهيد","t":"نص المادة"}]},{"type":"add_type","label":"عقد استثمار","grp":"عقود المشاركة","law":"نظام المعاملات المدنية"}]}
+مجموعات الأنواع: العقود الواردة على الملكية، العقود الواردة على المنفعة، العقود الواردة على العمل، عقود المشاركة، عقود أخرى.
+إذا ما فيه إجراء خلّ actions فاضية. إذا عرضت عقداً قل في الرد إن المسودة ظهرت يمين الشاشة وإن المستخدم يعبّي بيانات الأطراف عشان يطلع العقد والتوقيع.`;
+    const msgs = (Array.isArray(body.messages) ? body.messages : []).slice(-12)
+      .map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: cut(m.content, 3000) }));
+    let r;
+    try {
+      r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + akey, "Content-Type": "application/json", "X-Title": "Oqood Assist" },
+        body: JSON.stringify({ model: DEFAULT_MODEL, temperature: 0.3, max_tokens: 3500, response_format: { type: "json_object" }, messages: [{ role: "system", content: sys }, ...msgs] }),
+      });
+    } catch { return json({ error: "تعذّر الاتصال بالمساعد." }, 502); }
+    if (!r.ok) return json({ error: "المساعد رجّع خطأ (" + r.status + ")." }, 502);
+    const raw = String((await r.json()).choices?.[0]?.message?.content || "").replace(/```json|```/g, "").trim();
+    let o; try { o = JSON.parse(raw); } catch { o = { reply: raw, actions: [] }; }
+    const GRPS = ["العقود الواردة على الملكية", "العقود الواردة على المنفعة", "العقود الواردة على العمل", "عقود المشاركة", "عقود أخرى"];
+    const actions = [];
+    for (const x of (Array.isArray(o.actions) ? o.actions : []).slice(0, 4)) {
+      if (!x || typeof x !== "object") continue;
+      if (x.type === "add_type" && isAdmin && typeof x.label === "string" && x.label.trim())
+        actions.push({ type: "add_type", label: cut(x.label.trim(), 60), grp: GRPS.includes(x.grp) ? x.grp : "عقود أخرى", law: cut(x.law || "نظام المعاملات المدنية", 80) });
+      if (x.type === "show_contract" && Array.isArray(x.clauses) && x.clauses.length)
+        actions.push({ type: "show_contract", title: cut(x.title || "عقد", 80), type_label: cut(x.type_label || x.title || "", 80),
+          clauses: x.clauses.slice(0, 20).map((c) => ({ h: cut(c?.h || "", 120), t: cut(c?.t || "", 1500) })).filter((c) => c.h || c.t) });
+    }
+    return json({ reply: cut(o.reply || "", 4000), actions });
+  }
+
   const userKey = cut(body.userKey, 200).trim();
   const isSub = !!prof?.is_admin || (prof?.plan === "sub" && !(prof?.sub_until && new Date(prof.sub_until) < new Date(new Date().toDateString())));
   const plan = isSub ? "sub" : "own";
@@ -38,38 +91,6 @@ Deno.serve(async (req) => {
     if (isSub) return json({ error: "مفتاح الإدارة غير مضبوط في السيرفر." }, 500);
     const ended = prof?.plan === "sub";
     return json({ error: ended ? "انتهى اشتراكك. جدّده من الإدارة أو أضف مفتاح OpenRouter حقك من قائمة الحساب." : "أضف مفتاح OpenRouter حقك من قائمة الحساب، أو تواصل معنا للاشتراك.", code: "nokey" }, 403);
-  }
-
-  // ---- مساعد «إسألني» داخل المنصة (للمالك) ----
-  if (body.mode === "assist") {
-    if (!prof?.is_admin) return json({ error: "المساعد متاح للمالك فقط حالياً." }, 403);
-    const ctx = body.ctx || {};
-    const types = (Array.isArray(ctx.types) ? ctx.types : []).slice(0, 80).map((t) => cut(t, 80)).join("، ");
-    const sys = `أنت «إسألني»، مساعد داخل منصة «عقود» السعودية لصياغة العقود. تكلّم بلهجة سعودية مهذبة ومختصرة.
-تساعد المالك في: استخدام المنصة (صياغة عقد، التوقيع، رابط التوقيع، التصدير PDF/Word، مكتبة الأنظمة، نماذج العقود، أنواع العقود، إعدادات الموقع)، وأسئلة عامة عن العقود في الأنظمة السعودية (بدون فتوى قانونية ملزمة، ونبّه للمحامي في الأمور المهمة).
-أنواع العقود الموجودة الآن: ${types || "غير معروفة"}.
-مجموعات الأنواع: العقود الواردة على الملكية، العقود الواردة على المنفعة، العقود الواردة على العمل، عقود المشاركة، عقود أخرى.
-تقدر تنفّذ إجراء واحد فقط: إضافة نوع عقد جديد لما يطلب المستخدم نوع غير موجود في القائمة (مثل «عقد استثمار»)، أو يطلب إضافته صراحة. لا تضف نوعاً موجوداً أو قريباً جداً من موجود؛ وجّهه للموجود.
-ردّك دائماً JSON فقط بهذا الشكل:
-{"reply":"نص الرد","actions":[{"type":"add_type","label":"عقد ...","grp":"إحدى المجموعات الخمس","law":"النظام الحاكم مثل نظام المعاملات المدنية أو نظام العمل أو نظام الشركات"}]}
-إذا ما فيه إجراء خل actions مصفوفة فاضية. إذا أضفت نوعاً قل في الرد إنه جاهز وإن المستخدم يحدّث الصفحة.`;
-    const msgs = (Array.isArray(body.messages) ? body.messages : []).slice(-12)
-      .map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: cut(m.content, 3000) }));
-    let r;
-    try {
-      r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: "Bearer " + key, "Content-Type": "application/json", "X-Title": "Oqood Assist" },
-        body: JSON.stringify({ model: DEFAULT_MODEL, temperature: 0.3, response_format: { type: "json_object" }, messages: [{ role: "system", content: sys }, ...msgs] }),
-      });
-    } catch { return json({ error: "تعذّر الاتصال بالمساعد." }, 502); }
-    if (!r.ok) return json({ error: "المساعد رجّع خطأ (" + r.status + ")." }, 502);
-    const raw = String((await r.json()).choices?.[0]?.message?.content || "").replace(/```json|```/g, "").trim();
-    let o; try { o = JSON.parse(raw); } catch { o = { reply: raw, actions: [] }; }
-    const GRPS = ["العقود الواردة على الملكية", "العقود الواردة على المنفعة", "العقود الواردة على العمل", "عقود المشاركة", "عقود أخرى"];
-    const actions = (Array.isArray(o.actions) ? o.actions : []).filter((x) => x && x.type === "add_type" && typeof x.label === "string" && x.label.trim())
-      .slice(0, 3).map((x) => ({ type: "add_type", label: cut(x.label.trim(), 60), grp: GRPS.includes(x.grp) ? x.grp : "عقود أخرى", law: cut(x.law || "نظام المعاملات المدنية", 80) }));
-    return json({ reply: cut(o.reply || "", 4000), actions });
   }
 
   const d = body.d || {};
@@ -133,7 +154,7 @@ ${cut(d.userRequest, 4000)}
 
 ${d.extraTerms ? "شروط إضافية: " + cut(d.extraTerms, 2000) : ""}
 ${d.includeNDA ? "أضف قسم اتفاقية سرية مناسب." : ""}
-${body.uploadedText ? "\nنص مرفوع للاستفادة من بنوده:\n" + cut(body.uploadedText, 2500) : ""}
+${body.uploadedText ? "\nنص مرفوع للاستفادة من بنوده:\n" + cut(body.uploadedText, 6000) : ""}
 
 المطلوب:
 - صياغة قانونية رسمية متكاملة.

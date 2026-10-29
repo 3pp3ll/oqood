@@ -754,7 +754,7 @@
   });
 
   // ---------- تشغيل ----------
-  window.OQ = { ready: READY, draft, open: () => open(), user: () => st.user, isSub, sb: () => sb, isAdmin: () => !!(st.prof && st.prof.is_admin), refresh: () => { st.prof = null; return setUser(st.user); } };
+  window.OQ = { ready: READY, draft, open: () => open(), user: () => st.user, isSub, sb: () => sb, isAdmin: () => !!(st.prof && st.prof.is_admin), isIn: () => !!st.user, reloadTypes: () => loadSite(), refresh: () => { st.prof = null; return setUser(st.user); } };
   function boot() {
     mount();
     if (READY) {
