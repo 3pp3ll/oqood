@@ -8,10 +8,11 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <link rel="stylesheet" href="account.css?v=20261029h">
+<link rel="stylesheet" href="assist.css?v=20261029i">
 <link rel="stylesheet" href="sign.css?v=20261029d">
 <style>
 :root{--navy:#0f2744;--gold:#c9a84c;--ink:#1a2332;--muted:#5c6b7a;--line:#e2ddd4;}
-body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 0%,#f7f5f1 100%);color:var(--ink);min-height:100vh;padding:24px 0 60px;}
+body{font-family:'Tajawal',sans-serif;background:#efeadf linear-gradient(180deg,#e9edf0 0%,#f1ece2 38%,#efe9dc 100%) fixed;color:var(--ink);min-height:100vh;padding:24px 0 60px;}
 .logo-box{background:#fff;border-radius:12px;padding:8px 12px;display:inline-flex;flex-direction:column;align-items:center;margin-left:12px;box-shadow:0 4px 12px rgba(0,0,0,.1);user-select:none;-webkit-user-select:none;}
 .logo-box *{user-select:none;-webkit-user-select:none;}
 .logo-box .circle{width:48px;height:48px;border:3px solid var(--navy);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Amiri',serif;font-size:26px;font-weight:700;color:var(--navy);box-shadow:0 0 0 3px var(--gold);}
@@ -19,20 +20,20 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
 .header{background:linear-gradient(135deg,var(--navy) 0%,#1e4a78 50%,#2a5f9e 100%);color:#fff;padding:20px 22px;border-radius:22px;margin-bottom:22px;box-shadow:0 12px 32px rgba(15,39,68,.16);}
 .header h1{font-family:'Amiri',serif;font-weight:700;font-size:2.1rem;margin:0;}
 .header .lead{opacity:.9;font-size:.92rem;margin-top:2px;}
-.form-section,.preview-section{background:#fff;padding:22px;border-radius:18px;box-shadow:0 8px 24px rgba(15,39,68,.05);border:1px solid rgba(226,221,212,.6);}
+.form-section,.preview-section{background:#fbf9f4;padding:22px;border-radius:18px;box-shadow:0 8px 24px rgba(15,39,68,.05);border:1px solid rgba(226,221,212,.6);}
 .section-title{font-family:'Amiri',serif;font-size:1.3rem;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .req{color:#e74c3c;font-weight:700;}
 .form-label{font-weight:600;color:var(--navy);font-size:.9rem;}
-.form-control,.form-select{border-radius:10px;border:1px solid var(--line);padding:9px 12px;font-size:.94rem;}
+.form-control,.form-select{border-radius:10px;border:1px solid var(--line);background-color:#fffefb;padding:9px 12px;font-size:.94rem;}
 .btn-primary{background:linear-gradient(135deg,#1e4a78,#2a6cb0);border:none;border-radius:10px;padding:9px 16px;font-weight:600;}
 .party-card{background:#fafbfc;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;}
 .party-card h6{font-family:'Amiri',serif;color:var(--navy);margin-bottom:8px;}
 .contract-frame{border:5px solid var(--navy);border-radius:4px;padding:0;background:#fff;overflow:hidden;}
-.contract-paper{background:#fff;padding:24px 20px;min-height:320px;font-family:'Amiri',serif;font-size:1.02rem;line-height:1.6;color:#1c2430;outline:none;}
+.contract-paper{background:#fffdf8;padding:24px 20px;min-height:320px;font-family:'Amiri',serif;font-size:1.02rem;line-height:1.6;color:#1c2430;outline:none;}
 .contract-paper.editing{background:#fffef8;box-shadow:inset 0 0 0 2px var(--gold);}
 .contract-paper h2{font-family:'Cairo',sans-serif;font-weight:700;color:var(--navy);text-align:center;font-size:1.45rem;margin:0 0 4px;}
 .contract-paper .meta{text-align:center;color:var(--muted);font-size:.88rem;margin-bottom:12px;font-family:'Tajawal',sans-serif;}
-.clause-box{background:#fff;border:1px solid #f0ebe3;border-radius:6px;padding:10px 12px;margin:6px 0;}
+.clause-box{background:#fffdf8;border:1px solid #f0ebe3;border-radius:6px;padding:10px 12px;margin:6px 0;}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center;}
 .lang-group{display:flex;gap:6px;}
 .lang-group .btn{padding:5px 11px;font-size:.82rem;border-radius:8px;}
@@ -654,6 +655,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="editor.js?v=20261029e"></script>
 <script src="account.js?v=20261029i"></script>
+<script src="assist.js?v=20261029i"></script>
 <script src="pdf.js?v=20261029d"></script>
 <script src="sign.js?v=20261029d"></script>
 </body>

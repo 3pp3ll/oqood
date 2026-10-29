@@ -40,6 +40,38 @@ Deno.serve(async (req) => {
     return json({ error: ended ? "انتهى اشتراكك. جدّده من الإدارة أو أضف مفتاح OpenRouter حقك من قائمة الحساب." : "أضف مفتاح OpenRouter حقك من قائمة الحساب، أو تواصل معنا للاشتراك.", code: "nokey" }, 403);
   }
 
+  // ---- مساعد «إسألني» داخل المنصة (للمالك) ----
+  if (body.mode === "assist") {
+    if (!prof?.is_admin) return json({ error: "المساعد متاح للمالك فقط حالياً." }, 403);
+    const ctx = body.ctx || {};
+    const types = (Array.isArray(ctx.types) ? ctx.types : []).slice(0, 80).map((t) => cut(t, 80)).join("، ");
+    const sys = `أنت «إسألني»، مساعد داخل منصة «عقود» السعودية لصياغة العقود. تكلّم بلهجة سعودية مهذبة ومختصرة.
+تساعد المالك في: استخدام المنصة (صياغة عقد، التوقيع، رابط التوقيع، التصدير PDF/Word، مكتبة الأنظمة، نماذج العقود، أنواع العقود، إعدادات الموقع)، وأسئلة عامة عن العقود في الأنظمة السعودية (بدون فتوى قانونية ملزمة، ونبّه للمحامي في الأمور المهمة).
+أنواع العقود الموجودة الآن: ${types || "غير معروفة"}.
+مجموعات الأنواع: العقود الواردة على الملكية، العقود الواردة على المنفعة، العقود الواردة على العمل، عقود المشاركة، عقود أخرى.
+تقدر تنفّذ إجراء واحد فقط: إضافة نوع عقد جديد لما يطلب المستخدم نوع غير موجود في القائمة (مثل «عقد استثمار»)، أو يطلب إضافته صراحة. لا تضف نوعاً موجوداً أو قريباً جداً من موجود؛ وجّهه للموجود.
+ردّك دائماً JSON فقط بهذا الشكل:
+{"reply":"نص الرد","actions":[{"type":"add_type","label":"عقد ...","grp":"إحدى المجموعات الخمس","law":"النظام الحاكم مثل نظام المعاملات المدنية أو نظام العمل أو نظام الشركات"}]}
+إذا ما فيه إجراء خل actions مصفوفة فاضية. إذا أضفت نوعاً قل في الرد إنه جاهز وإن المستخدم يحدّث الصفحة.`;
+    const msgs = (Array.isArray(body.messages) ? body.messages : []).slice(-12)
+      .map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: cut(m.content, 3000) }));
+    let r;
+    try {
+      r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + key, "Content-Type": "application/json", "X-Title": "Oqood Assist" },
+        body: JSON.stringify({ model: DEFAULT_MODEL, temperature: 0.3, response_format: { type: "json_object" }, messages: [{ role: "system", content: sys }, ...msgs] }),
+      });
+    } catch { return json({ error: "تعذّر الاتصال بالمساعد." }, 502); }
+    if (!r.ok) return json({ error: "المساعد رجّع خطأ (" + r.status + ")." }, 502);
+    const raw = String((await r.json()).choices?.[0]?.message?.content || "").replace(/```json|```/g, "").trim();
+    let o; try { o = JSON.parse(raw); } catch { o = { reply: raw, actions: [] }; }
+    const GRPS = ["العقود الواردة على الملكية", "العقود الواردة على المنفعة", "العقود الواردة على العمل", "عقود المشاركة", "عقود أخرى"];
+    const actions = (Array.isArray(o.actions) ? o.actions : []).filter((x) => x && x.type === "add_type" && typeof x.label === "string" && x.label.trim())
+      .slice(0, 3).map((x) => ({ type: "add_type", label: cut(x.label.trim(), 60), grp: GRPS.includes(x.grp) ? x.grp : "عقود أخرى", law: cut(x.law || "نظام المعاملات المدنية", 80) }));
+    return json({ reply: cut(o.reply || "", 4000), actions });
+  }
+
   const d = body.d || {};
   const p = (x) => x || {};
   const p1 = p(d.p1), p2 = p(d.p2);
