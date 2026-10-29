@@ -25,6 +25,7 @@
       '<button type="button" data-ask="hist" aria-expanded="false" title="المحادثات السابقة">🕘 السابقة</button>' +
       '<button type="button" data-ask="new" title="محادثة جديدة">＋ جديدة</button>' +
       '<button type="button" data-ask="clear" title="مسح هذي المحادثة">🗑</button>' +
+      '<button type="button" data-ask="min" aria-expanded="true" aria-label="تصغير" title="تصغير">—</button>' +
       '<button type="button" data-ask="close" aria-label="إغلاق">✕</button></div></header>' +
       '<div class="oq-ask-hist" id="oqAskHist" hidden></div>' +
       '<div class="oq-ask-msgs" id="oqAskMsgs" aria-live="polite"></div>' +
@@ -40,7 +41,7 @@
   }
   function toggle() { $('#oqAsk').hidden ? open() : close(); }
   function open(q) {
-    const p = $('#oqAsk'); p.hidden = false; $('#oqAskFab').setAttribute('aria-expanded', 'true');
+    const p = $('#oqAsk'); p.hidden = false; p.classList.remove('min'); $('#oqAskFab').setAttribute('aria-expanded', 'true');
     if (!cur) cur = chats[0] || null;
     paint(); setTimeout(() => $('#oqAskQ').focus(), 30);
     if (q) ask(q);
@@ -49,7 +50,7 @@
   function paint() {
     const box = $('#oqAskMsgs');
     const msgs = cur ? cur.msgs : [];
-    box.innerHTML = msgs.length ? msgs.map((m) => '<div class="oq-m ' + (m.r === 'u' ? 'u' : 'a') + (m.err ? ' err' : '') + '">' + fmt(m.c) + (m.done ? '<div class="oq-done">✓ ' + esc(m.done) + '</div>' : '') + '</div>').join('') +
+    box.innerHTML = msgs.length ? msgs.map((m, i) => '<div class="oq-m ' + (m.r === 'u' ? 'u' : 'a') + (m.err ? ' err' : '') + '">' + fmt(m.c) + (m.done ? '<div class="oq-done">✓ ' + esc(m.done) + '</div>' : '') + (m.draft ? '<button type="button" class="oq-show" data-ask="draft" data-i="' + i + '">📄 اعرض المسودة</button>' : '') + '</div>').join('') +
       (busy ? '<div class="oq-m a oq-typing"><span></span><span></span><span></span></div>' : '')
       : '<div class="oq-empty"><b>هلا 👋</b><p>أنا مساعد المنصة ودعمها الفني. اسألني عن أي خطوة، أو اطلب عقد مثل «عقد استثمار» وأطلّع لك مسودته يمين الشاشة.</p>' +
         ['كيف أرسل رابط توقيع للعميل؟', 'أبغى عقد استثمار', 'وش الفرق بين عقد المقاولة وعقد الخدمات؟'].map((s) => '<button type="button" class="oq-sug" data-ask="sug">' + esc(s) + '</button>').join('') + '</div>';
@@ -72,6 +73,8 @@
     if (a === 'new') { cur = null; $('#oqAskHist').hidden = true; paint(); $('#oqAskQ').focus(); return; }
     if (a === 'pick') { cur = chats.find((c) => c.id === b.dataset.id) || null; $('#oqAskHist').hidden = true; paint(); return; }
     if (a === 'sug') return ask(b.textContent);
+    if (a === 'draft') { const m = cur && cur.msgs[+b.dataset.i]; if (m && m.draft) showDraft(m.draft); return; }
+    if (a === 'min') { $('#oqAsk').classList.toggle('min'); b.setAttribute('aria-expanded', String(!$('#oqAsk').classList.contains('min'))); return; }
     if (a === 'clear') {
       if (!cur) return;
       if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'متأكد؟'; setTimeout(() => { b.dataset.sure = ''; b.textContent = '🗑'; }, 3000); return; }
@@ -102,7 +105,7 @@
       if (done.length && window.OQ && OQ.reloadTypes) { try { await OQ.reloadTypes(); } catch (x) {} }
       const at = acts.find((a) => a.type === 'add_type'); if (at) pickType(at.label);
       const sc = acts.find((a) => a.type === 'show_contract');
-      if (sc) { showDraft(sc); done.push('ظهرت مسودة «' + sc.title + '» يمين الشاشة. اضغط «اعتمدها» وعبّي بيانات الأطراف عشان يطلع العقد والتوقيع'); }
+      if (sc) { showDraft(sc); rep.draft = sc; done.push('ظهرت مسودة «' + sc.title + '» تحت نموذج إنشاء العقد. اضغط «اعتمدها»، عبّي البيانات واختر اللغة ثم «صياغة قانونية»'); }
       else if (at) done.push('النوع صار في القائمة ومختار لك');
       if (done.length) rep.done = done.join('. ') + '.';
     } catch (e) {
@@ -135,18 +138,24 @@
   function showDraft(d) {
     draft = d;
     let box = $('#oqDraft');
-    if (!box) { box = document.createElement('aside'); box.id = 'oqDraft'; box.className = 'oq-draft no-print'; box.dir = 'rtl'; box.setAttribute('aria-label', 'مسودة العقد'); document.body.appendChild(box); box.addEventListener('click', onDraft); }
-    box.classList.remove('min');
-    box.innerHTML = '<header><button type="button" class="oq-d-t" data-dr="min" aria-expanded="true">📄 <b>' + esc(d.title) + '</b><small>مسودة بدون بيانات</small></button><button type="button" data-dr="close" aria-label="إغلاق المسودة">✕</button></header>' +
+    if (!box) {
+      box = document.createElement('section'); box.id = 'oqDraft'; box.className = 'form-section mb-4 oq-draft no-print'; box.dir = 'rtl'; box.setAttribute('aria-labelledby', 'oqDraftT');
+      const saved = $('#contractsList'), card = saved && (saved.closest('.form-section') || saved.parentNode);
+      if (card) card.parentNode.insertBefore(box, card); else document.body.appendChild(box);
+      box.addEventListener('click', onDraft);
+    }
+    box.hidden = false;
+    box.innerHTML = '<div class="oq-d-top"><div><span class="oq-d-tag">مسودة من إسألني</span><div class="section-title" id="oqDraftT" style="margin:6px 0 0">📄 ' + esc(d.title) + '</div></div>' +
+      '<div class="oq-d-acts"><button type="button" class="btn btn-success" data-dr="use">✓ اعتمدها وعبّي البيانات</button><button type="button" class="btn btn-outline-secondary" data-dr="copy">نسخ</button><button type="button" class="btn btn-outline-secondary" data-dr="close">إخفاء</button></div></div>' +
       '<div class="oq-d-body">' + d.clauses.map((c) => (c.h ? '<h4>' + esc(c.h) + '</h4>' : '') + (c.t ? '<p>' + esc(c.t).replace(/\n/g, '<br>') + '</p>' : '')).join('') + '</div>' +
-      '<footer><button type="button" class="oq-d-use" data-dr="use">✓ اعتمدها وعبّي الأطراف</button><button type="button" data-dr="copy">نسخ</button></footer>';
+      '<p class="oq-d-hint">مسودة بدون بيانات. لما تعتمدها وتضغط «صياغة قانونية»، العقد ينبني على هذي المواد ويكمّل من نماذج عقودك المحفوظة. تختفي لما تطلع من الصفحة، وترجعها من «📄 اعرض المسودة» في المحادثة.</p>';
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   function draftText() { return draft ? draft.clauses.map((c) => (c.h ? c.h + '\n' : '') + (c.t || '')).join('\n\n') : ''; }
   async function onDraft(e) {
     const b = e.target.closest('[data-dr]'); if (!b) return;
     const box = $('#oqDraft'), a = b.dataset.dr;
-    if (a === 'close') { box.remove(); return; }
-    if (a === 'min') { box.classList.toggle('min'); b.setAttribute('aria-expanded', String(!box.classList.contains('min'))); return; }
+    if (a === 'close') { box.hidden = true; return; }
     if (a === 'copy') { try { await navigator.clipboard.writeText(draftText()); b.textContent = 'تم النسخ ✓'; } catch (x) {} return; }
     if (a === 'use') {
       window.OQ_TPL = draftText();
@@ -154,10 +163,10 @@
       const t = $('#contractTitle'); if (t && !t.value.trim()) t.value = draft.title;
       const ur = $('#userRequest'); if (ur && !ur.value.trim()) ur.value = 'أبغى ' + draft.title + ' حسب المسودة المعتمدة من المساعد.';
       const f = $('#formSection'), pv = $('#previewSection'); if (f) f.style.display = 'block'; if (pv) pv.style.display = 'none';
-      box.classList.add('min'); close();
+      const ap = $('#oqAsk'); if (ap && !ap.hidden) ap.classList.add('min');
       let n = $('#oqFillNote');
       if (!n) { n = document.createElement('div'); n.id = 'oqFillNote'; n.className = 'oq-fill no-print'; n.setAttribute('role', 'status'); const anchor = f && f.querySelector('.section-title'); if (anchor) anchor.insertAdjacentElement('afterend', n); }
-      n.innerHTML = '📝 المسودة «' + esc(draft.title) + '» معتمدة. قم بتعبئة بيانات الأطراف، بعدها اضغط «صياغة قانونية» عشان يطلع العقد والتوقيع. <button type="button" aria-label="إخفاء" onclick="this.parentNode.remove()">✕</button>';
+      n.innerHTML = '📝 المسودة «' + esc(draft.title) + '» معتمدة. عبّي بيانات الأطراف وباقي التفاصيل واختر اللغة، بعدها اضغط «صياغة قانونية» عشان يطلع العقد بموادها والتوقيع. <button type="button" aria-label="إخفاء" onclick="this.parentNode.remove()">✕</button>';
       (f || document.body).scrollIntoView({ behavior: 'smooth', block: 'start' });
       setTimeout(() => { const p1 = document.querySelector('#formSection input'); if (p1) p1.focus({ preventScroll: true }); }, 500);
     }
