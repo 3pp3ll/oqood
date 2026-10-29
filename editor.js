@@ -31,6 +31,16 @@
     const blocks = [...box.children];
     const sig = blocks.findIndex((b) => /^\s*(التوقيع|التوقيعات|التواقيع|Signatures?)\s*:?\s*$/i.test(b.textContent));
     if (sig > 0) { for (let i = sig; i < blocks.length; i++) { if (/^H3$/.test(blocks[i].tagName) && i > sig) break; blocks[i].remove(); } }
+    // سطور التوقيع اللي يكتبها النموذج داخل الجدول الثنائي أو بأي مكان (خطوط ____ مع «توقيع»)
+    box.querySelectorAll('tr,p,li,div').forEach((el) => {
+      if (!box.contains(el)) return; const t = el.textContent || '';
+      if (/_{4,}|\.{8,}|…{3,}/.test(t) && /توقيع|Signature/i.test(t) && t.replace(/[_.\s…]/g, '').length < 160) el.remove();
+    });
+    box.querySelectorAll('tr,h3,p').forEach((el) => {
+      if (!box.contains(el)) return; const t = (el.textContent || '').trim();
+      if (t.length < 90 && /(التوقيعات|التواقيع|التوقيع|Signatures?)\s*:?\s*$/i.test(t)) el.remove();
+    });
+    box.querySelectorAll('table').forEach((t) => { if (!t.querySelector('td,th')) t.remove(); });
     return box.innerHTML;
   };
 

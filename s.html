@@ -8,7 +8,7 @@
 <title>توقيع عقد — عقود</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Amiri:wght@400;700&family=Cairo:wght@600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="sign.css?v=20261029c">
+<link rel="stylesheet" href="sign.css?v=20261029d">
 <style>
 :root{--navy:#0f2744;--gold:#c9a84c;--ink:#1a2332;--muted:#5c6b7a;--line:#e2ddd4;}
 body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 0%,#f7f5f1 100%);color:var(--ink);min-height:100vh;margin:0;}
@@ -89,7 +89,8 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="sign.js?v=20261029c"></script>
+<script src="pdf.js?v=20261029d"></script>
+<script src="sign.js?v=20261029d"></script>
 <script>
 (function () {
   const SB_URL = 'https://ecqhdztlrckupjlizxsv.supabase.co', SB_ANON = 'sb_publishable_nSXC6s1s8zJbUaGPOxLPMA_pKo8TOY7';
@@ -146,14 +147,7 @@ body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 
   $('goSign').onclick = () => { const b = document.querySelector('[data-sg="2"]'); if (b) { b.scrollIntoView({ behavior: 'smooth', block: 'center' }); b.click(); } };
 
   async function savePdf() {
-    const canvas = await html2canvas(document.querySelector('.contract-frame'), { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', ignoreElements: (el) => el.classList && el.classList.contains('no-print') });
-    const pdf = new jspdf.jsPDF('p', 'mm', 'a4'), pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight(), iw = pw - 14, ih = canvas.height * iw / canvas.width;
-    let left = ih, y = 0;
-    while (left > 0) {
-      const sh = Math.min(ph - 14, left), c = document.createElement('canvas'); c.width = canvas.width; c.height = Math.max(1, sh / ih * canvas.height);
-      c.getContext('2d').drawImage(canvas, 0, y, canvas.width, c.height, 0, 0, canvas.width, c.height);
-      pdf.addImage(c.toDataURL('image/jpeg', 0.8), 'JPEG', 7, 7, iw, sh); left -= sh; y += c.height; if (left > 0) pdf.addPage();
-    }
+    const pdf = await window.oqPdf(document.querySelector('.contract-frame'), { ref: info ? info.ref : '' });
     pdf.save(((info && info.title) || 'عقد').replace(/[\\/:*?"<>|]/g, '') + ' - ' + (info ? info.ref : '') + '.pdf');
   }
   $('dl').onclick = savePdf;
