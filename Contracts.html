@@ -251,7 +251,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (Array.isArray(types) && types.length) {
       const sel = document.getElementById('contractType'), cur = sel.options[sel.selectedIndex]?.text;
-      sel.innerHTML = types.map(t => `<option value="${t.id}">${escH(t.label)}</option>`).join('');
+      const opt = t => `<option value="${t.id}" data-law="${escH(t.law || '')}">${escH(t.label)}</option>`;
+      const groups = []; types.forEach(t => { const g = t.grp || ''; let G = groups.find(x => x.g === g); if (!G) groups.push(G = { g, list: [] }); G.list.push(t); });
+      sel.innerHTML = groups.map(G => G.g ? `<optgroup label="${escH(G.g)}">${G.list.map(opt).join('')}</optgroup>` : G.list.map(opt).join('')).join('');
       const keep = [...sel.options].find(o => o.text === cur); if (keep) sel.value = keep.value;
     }
   };
@@ -407,6 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function collectData() {
     return {
       typeLabel: document.getElementById('contractType').options[document.getElementById('contractType').selectedIndex].text,
+      typeLaw: document.getElementById('contractType').selectedOptions[0]?.dataset.law || '',
       typeId: /^\d+$/.test(document.getElementById('contractType').value) ? document.getElementById('contractType').value : '',
       title: document.getElementById('contractTitle').value,
       date: document.getElementById('contractDate').value,
@@ -460,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function() {
 ${langNote}
 
 البيانات:
-- نوع العقد: ${d.typeLabel}
+- نوع العقد: ${d.typeLabel}${d.typeLaw ? '\n- النظام الحاكم لهذا النوع: ' + d.typeLaw + ' (التزم بأحكامه، وإذا كان نظاماً خاصاً فأحكامه مقدّمة على نظام المعاملات المدنية)' : ''}
 - العنوان: ${d.title}
 - التاريخ: ${formatDate(d.date)}
 - القيمة: ${d.value ? d.value + ' ' + currencyText(d.currency) : 'غير محددة'}
@@ -485,7 +488,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
       if (useServer) {
         const fmt = (p) => ({ name: p.name, id: p.id, mobile: p.mobile, dob: formatDate(p.dob) });
         const r = await OQ.draft({
-          d: { typeId: d.typeId, typeLabel: d.typeLabel, title: d.title, date: formatDate(d.date), valueText: d.value ? d.value + ' ' + currencyText(d.currency) : '',
+          d: { typeId: d.typeId, typeLabel: d.typeLabel, typeLaw: d.typeLaw, title: d.title, date: formatDate(d.date), valueText: d.value ? d.value + ' ' + currencyText(d.currency) : '',
                userRequest: d.userRequest, extraTerms: d.extraTerms, includeNDA: d.includeNDA, lang: d.lang, p1: fmt(d.p1), p2: fmt(d.p2) },
           uploadedText: uploadedText.substring(0, 2500)
         });
@@ -650,7 +653,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="editor.js?v=20261029e"></script>
-<script src="account.js?v=20261029h"></script>
+<script src="account.js?v=20261029i"></script>
 <script src="pdf.js?v=20261029d"></script>
 <script src="sign.js?v=20261029d"></script>
 </body>

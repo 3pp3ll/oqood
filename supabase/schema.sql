@@ -145,6 +145,8 @@ create table if not exists public.contract_types (
   ord int not null default 0,
   active boolean not null default true
 );
+alter table public.contract_types add column if not exists grp text;   -- مجموعة النوع (types.sql يعبّيها)
+alter table public.contract_types add column if not exists law text;   -- النظام الحاكم
 create table if not exists public.contract_templates (
   id bigserial primary key,
   type_id bigint references public.contract_types(id) on delete set null,

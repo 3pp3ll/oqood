@@ -584,16 +584,22 @@
   // ---------- أنواع العقود ----------
   function renderTypes() {
     $('#admBody').innerHTML = `<div class="adm-box"><h6>أنواع العقود</h6>
-      <p class="adm-hint" style="margin:0 0 10px">هذي القائمة اللي يختار منها المستخدم «نوع العقد». الموقوف ما يظهر للمستخدمين.</p>
+      <p class="adm-hint" style="margin:0 0 10px">هذي القائمة اللي يختار منها المستخدم «نوع العقد»، مقسّمة على مجموعات. «النظام الحاكم» يوجّه الصياغة والبحث في مكتبة الأنظمة. الموقوف ما يظهر للمستخدمين.</p>
+      <datalist id="tyGrps">${['العقود الواردة على الملكية', 'العقود الواردة على المنفعة', 'العقود الواردة على العمل', 'عقود المشاركة', 'عقود أخرى'].map((g) => `<option value="${g}">`).join('')}</datalist>
+      <datalist id="tyLaws">${['نظام المعاملات المدنية', 'نظام العمل', 'نظام الشركات', 'نظام المحاكم التجارية', 'نظام التجارة الإلكترونية', 'نظام الإيجار'].map((g) => `<option value="${g}">`).join('')}</datalist>
       <div id="tyRows"></div>
-      <div class="d-flex gap-2 mt-3 flex-wrap"><input class="form-control" id="tyNew" placeholder="نوع جديد، مثال: عقد عمل" style="max-width:320px">
+      <div class="d-flex gap-2 mt-3 flex-wrap"><input class="form-control" id="tyNew" placeholder="نوع جديد، مثال: عقد عمل" style="max-width:260px">
+        <input class="form-control" id="tyNewG" list="tyGrps" placeholder="المجموعة" style="max-width:220px">
+        <input class="form-control" id="tyNewL" list="tyLaws" placeholder="النظام الحاكم" style="max-width:220px">
         <button type="button" class="btn btn-primary" data-a="addType">إضافة</button></div>
       <div class="acc-msg" id="tyMsg" role="status" style="margin:10px 0 0"></div></div>`;
     drawTypes();
   }
   function drawTypes() {
     $('#tyRows').innerHTML = typesCache.length ? typesCache.map((x, i) => `<div class="adm-law" data-ty="${x.id}">
-        <input class="form-control form-control-sm" data-tylabel value="${esc(x.label)}" style="flex:1;min-width:180px">
+        <input class="form-control form-control-sm" data-tylabel value="${esc(x.label)}" style="flex:1;min-width:170px" aria-label="اسم النوع">
+        <input class="form-control form-control-sm" data-tygrp list="tyGrps" value="${esc(x.grp || '')}" placeholder="المجموعة" style="width:190px" aria-label="المجموعة">
+        <input class="form-control form-control-sm" data-tylaw list="tyLaws" value="${esc(x.law || '')}" placeholder="النظام الحاكم" style="width:190px" aria-label="النظام الحاكم">
         <div class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" data-tyon id="tyOn${x.id}" ${x.active ? 'checked' : ''}><label class="form-check-label small" for="tyOn${x.id}">${x.active ? 'ظاهر' : 'موقوف'}</label></div>
         <button type="button" class="btn btn-sm btn-outline-secondary" data-a="tyUp" ${i ? '' : 'disabled'} aria-label="لفوق">▲</button>
         <button type="button" class="btn btn-sm btn-outline-secondary" data-a="tyDown" ${i < typesCache.length - 1 ? '' : 'disabled'} aria-label="لتحت">▼</button>
@@ -658,14 +664,17 @@
     async addType() {
       const label = $('#tyNew').value.trim(); if (!label) return msg('tyMsg', 'اكتب اسم النوع.');
       const ord = typesCache.reduce((m, x) => Math.max(m, x.ord), 0) + 1;
-      const { error } = await sb.from('contract_types').insert({ label, ord });
+      const grp = $('#tyNewG').value.trim() || null, law = $('#tyNewL').value.trim() || null;
+      const { error } = await sb.from('contract_types').insert(grp || law ? { label, ord, grp, law } : { label, ord });
       if (error) return msg('tyMsg', errText(error));
-      $('#tyNew').value = ''; msg('tyMsg', 'انضاف ✓', true); typesChanged();
+      $('#tyNew').value = ''; $('#tyNewG').value = ''; $('#tyNewL').value = ''; msg('tyMsg', 'انضاف ✓', true); typesChanged();
     },
     async tySave(b) {
       const row = b.closest('[data-ty]'), label = row.querySelector('[data-tylabel]').value.trim();
       if (!label) return msg('tyMsg', 'الاسم ما يكون فاضي.');
-      const { error } = await sb.from('contract_types').update({ label, active: row.querySelector('[data-tyon]').checked }).eq('id', row.dataset.ty);
+      const up = { label, active: row.querySelector('[data-tyon]').checked };
+      if (row.querySelector('[data-tygrp]').value.trim() || row.querySelector('[data-tylaw]').value.trim() || typesCache.some((x) => 'grp' in x)) { up.grp = row.querySelector('[data-tygrp]').value.trim() || null; up.law = row.querySelector('[data-tylaw]').value.trim() || null; }
+      const { error } = await sb.from('contract_types').update(up).eq('id', row.dataset.ty);
       if (error) return msg('tyMsg', errText(error)); msg('tyMsg', 'انحفظ ✓', true); typesChanged();
     },
     async tyDel(b) {

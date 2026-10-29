@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
   const lang = ["ar", "en", "both"].includes(d.lang) ? d.lang : "ar";
 
   // ---- البحث في مكتبة الأنظمة ----
-  const q = cut([d.typeLabel, d.title, d.userRequest, d.extraTerms, d.includeNDA ? "سرية المعلومات إفشاء" : ""].join(" "), 1500);
+  const q = cut([d.typeLabel, d.typeLaw, d.title, d.userRequest, d.extraTerms, d.includeNDA ? "سرية المعلومات إفشاء" : ""].join(" "), 1500);
   const { data: arts } = await userDb.rpc("search_articles", { q, n: 12 });
   const sources = (arts || []).map((a, i) => ({
     ref: i + 1, law: a.law_title, kind: a.kind, num: a.num || "", url: a.source_url || "", body: cut(a.body, 1400),
@@ -88,7 +88,7 @@ ${srcBlock}${tplBlock}`;
 ${langNote}
 
 البيانات:
-- نوع العقد: ${cut(d.typeLabel, 80)}
+- نوع العقد: ${cut(d.typeLabel, 80)}${d.typeLaw ? `\n- النظام الحاكم لهذا النوع: ${cut(d.typeLaw, 80)} (التزم بأحكامه، وإذا كان نظاماً خاصاً فأحكامه مقدّمة على نظام المعاملات المدنية)` : ""}
 - العنوان: ${cut(d.title, 200)}
 - التاريخ: ${cut(d.date, 40)}
 - القيمة: ${cut(d.valueText, 120) || "غير محددة"}
