@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>توقيع عقد — عقود</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Amiri:wght@400;700&family=Cairo:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="sign.css?v=20261029c">
+<style>
+:root{--navy:#0f2744;--gold:#c9a84c;--ink:#1a2332;--muted:#5c6b7a;--line:#e2ddd4;}
+body{font-family:'Tajawal',sans-serif;background:linear-gradient(180deg,#eef2f6 0%,#f7f5f1 100%);color:var(--ink);min-height:100vh;margin:0;}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 60px;}
+.hd{background:linear-gradient(135deg,#0f2142,#25508a);color:#fff;border-radius:18px;padding:16px;display:flex;gap:12px;align-items:center;}
+.hd .lg{width:44px;height:44px;border-radius:50%;background:#fff;color:var(--navy);display:grid;place-items:center;font-family:'Amiri',serif;font-weight:700;font-size:1.4rem;box-shadow:0 0 0 3px var(--gold);flex:none;}
+.hd b{font-size:1.1rem;display:block}.hd span{font-size:.82rem;opacity:.85}
+.card2{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:14px;}
+.card2 h1{font-size:1.1rem;font-weight:800;margin:0 0 6px;}
+.mut{color:var(--muted);font-size:.9rem;}
+.steps{display:flex;gap:4px;margin-top:12px}.steps span{flex:1;height:4px;border-radius:4px;background:#e5e7eb}.steps span.on{background:var(--gold)}
+.otp{display:flex;gap:10px;justify-content:center;direction:ltr;margin:16px 0 8px}
+.otp input{width:54px;height:60px;text-align:center;font-size:1.5rem;font-weight:800;border:1.5px solid #d6d0c2;border-radius:12px;background:#fdfbf6;}
+.otp input:focus{outline:2px solid var(--gold);outline-offset:1px}
+.err{color:#b91c1c;font-size:.88rem;min-height:1.3em;text-align:center}
+.contract-frame{border:5px solid var(--navy);border-radius:4px;background:#fff;overflow:hidden;margin-top:14px}
+.contract-paper{background:#fff;padding:22px 18px;font-family:'Amiri',serif;font-size:1.02rem;line-height:1.6;color:#1c2430;}
+.contract-paper h2{font-family:'Cairo',sans-serif;font-weight:700;color:var(--navy);text-align:center;font-size:1.4rem;margin:0 0 4px;}
+.contract-paper .meta{text-align:center;color:var(--muted);font-size:.88rem;margin-bottom:12px;font-family:'Tajawal',sans-serif;}
+.clause-box{background:#fff;border:1px solid #f0ebe3;border-radius:6px;padding:10px 12px;margin:6px 0;text-align:start}
+.clause-box h3{font-family:'Amiri',serif;font-size:1.15em;font-weight:700;color:var(--navy);margin:14px 0 4px}
+.clause-box p{margin:0 0 8px;text-align:justify}
+.disclaimer{font-size:.78rem;color:#888;text-align:center;margin-top:20px;font-family:'Tajawal',sans-serif;}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;margin:10px 0;cursor:pointer}
+.chk input{width:20px;height:20px;margin-top:2px;accent-color:#15803d;flex:none}
+.hint{background:#fff8e6;border:1px solid #f1d58a;border-radius:10px;padding:8px 12px;font-size:.88rem;margin-top:10px}
+.done-ic{width:64px;height:64px;border-radius:50%;background:#15803d;color:#fff;display:grid;place-items:center;font-size:2rem;margin:0 auto 10px}
+.center{text-align:center}
+[hidden]{display:none!important}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd"><div class="lg">ع</div><div><b id="hTitle">توقيع عقد</b><span id="hFrom">رابط توقيع خاص</span></div></div>
+  <div class="steps" aria-hidden="true"><span class="on"></span><span></span><span></span></div>
+
+  <section class="card2" id="vGate">
+    <h1>تأكيد الهوية</h1>
+    <p class="mut">اكتب آخر 4 أرقام من رقم جوالك اللي أرسلته لصاحب العقد.</p>
+    <div class="otp" id="otp"><input inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="الرقم الأول"><input inputmode="numeric" maxlength="1" aria-label="الرقم الثاني"><input inputmode="numeric" maxlength="1" aria-label="الرقم الثالث"><input inputmode="numeric" maxlength="1" aria-label="الرقم الرابع"></div>
+    <div class="err" id="gErr" role="status"></div>
+    <button type="button" class="btn btn-primary w-100 mt-2" id="gBtn">تحقق</button>
+    <p class="mut small mt-3 mb-0">بعد 5 محاولات خاطئة ينقفل الرابط.</p>
+  </section>
+
+  <section class="card2 center" id="vBad" hidden>
+    <div class="done-ic" style="background:#9ca3af">!</div>
+    <h1>الرابط غير صالح أو انتهت صلاحيته</h1>
+    <p class="mut m-0">هذا الرابط مستخدم من قبل أو ملغي أو منتهي. تواصل مع صاحب العقد إذا تحتاج رابط جديد.</p>
+  </section>
+
+  <section id="vDoc" hidden>
+    <div class="card2">
+      <h1>اقرأ العقد ثم وقّع</h1>
+      <p class="mut m-0">العقد للقراءة فقط وما يمكن تعديله. اقرأه كامل، وافق على الإقرارين، ثم وقّع في خانة «الطرف الثاني» آخر العقد.</p>
+    </div>
+    <div class="contract-frame">
+      <div class="contract-paper" id="contractPreview"></div>
+      <div id="sigBlock"></div>
+    </div>
+    <div class="card2" id="agree">
+      <label class="chk"><input type="checkbox" id="c1"> قرأت العقد كاملاً وأوافق على ما فيه.</label>
+      <label class="chk"><input type="checkbox" id="c2"> أوافق على حفظ اسمي وتوقيعي ووقت التوقيع وبيانات جهازي وعنوان الإنترنت كسجل إثبات لهذا العقد.</label>
+      <div class="hint" id="hint" hidden>حدد المربعين أول، بعدها اضغط على خانة توقيعك.</div>
+      <button type="button" class="btn btn-success w-100 mt-2" id="goSign">وقّع الحين ✍️</button>
+    </div>
+  </section>
+
+  <section class="card2 center" id="vDone" hidden>
+    <div class="done-ic">✓</div>
+    <h1>تم التوقيع</h1>
+    <p class="mut">وصلت نسخة العقد الموقّعة لصاحب العقد. نزّل نسختك واحتفظ فيها.</p>
+    <button type="button" class="btn btn-primary w-100" id="dl">⤓ تنزيل العقد PDF</button>
+    <p class="mut small mt-3 mb-0">الرابط انتهى الحين وما يمكن استخدامه مرة ثانية.</p>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="sign.js?v=20261029c"></script>
+<script>
+(function () {
+  const SB_URL = 'https://ecqhdztlrckupjlizxsv.supabase.co', SB_ANON = 'sb_publishable_nSXC6s1s8zJbUaGPOxLPMA_pKo8TOY7';
+  const $ = (id) => document.getElementById(id);
+  const token = (new URLSearchParams(location.hash.slice(1))).get('k') || '';
+  // نشيل الرابط من شريط العنوان والسجل عشان ما ينحفظ أو ينرسل مع أي طلب
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  let sb = null, last4 = '', info = null;
+  try { sb = window.supabase.createClient(SB_URL, SB_ANON, { auth: { persistSession: false, autoRefreshToken: false } }); } catch (e) {}
+  const show = (v) => { ['vGate', 'vBad', 'vDoc', 'vDone'].forEach((x) => { $(x).hidden = x !== v; }); const n = { vGate: 1, vDoc: 2, vDone: 3, vBad: 0 }[v]; document.querySelectorAll('.steps span').forEach((s, i) => s.classList.toggle('on', i < n)); window.scrollTo(0, 0); };
+  if (!token || !sb) { show('vBad'); return; }
+
+  sb.rpc('sign_check', { p_token: token }).then(({ data, error }) => { if (!error && data === false) show('vBad'); });
+  const ins = [...document.querySelectorAll('#otp input')];
+  ins.forEach((x, i) => {
+    x.addEventListener('input', () => { const v = x.value.replace(/\D/g, ''); if (v.length > 1) { v.split('').slice(0, 4 - i).forEach((d, j) => { ins[i + j].value = d; }); (ins[Math.min(3, i + v.length)]).focus(); return; } x.value = v; if (v && ins[i + 1]) ins[i + 1].focus(); if (ins.every((y) => y.value)) verify(); });
+    x.addEventListener('keydown', (e) => { if (e.key === 'Backspace' && !x.value && ins[i - 1]) ins[i - 1].focus(); if (e.key === 'Enter') verify(); });
+  });
+  ins[0].focus();
+  $('gBtn').onclick = verify;
+  let busy = false;
+  async function verify() {
+    if (busy) return; const v = ins.map((x) => x.value).join('');
+    if (!/^\d{4}$/.test(v)) { $('gErr').textContent = 'اكتب الأرقام الأربعة.'; return; }
+    busy = true; $('gBtn').disabled = true; $('gErr').textContent = '';
+    const { data, error } = await sb.rpc('sign_open', { p_token: token, p_last4: v });
+    busy = false; $('gBtn').disabled = false;
+    if (error) { $('gErr').textContent = 'تعذّر الاتصال، حاول مرة ثانية.'; return; }
+    if (!data.ok) {
+      if (data.err === 'bad') { $('gErr').textContent = 'الرقم غير صحيح، باقي لك ' + data.left + (data.left > 2 ? ' محاولات.' : ' محاولة.'); ins.forEach((x) => { x.value = ''; }); ins[0].focus(); return; }
+      show('vBad'); return;
+    }
+    last4 = v; info = data;
+    $('hTitle').textContent = data.title || 'توقيع عقد'; $('hFrom').textContent = 'مرسل من: ' + (data.p1 || '') + ' · ' + data.ref;
+    $('contractPreview').innerHTML = data.html;
+    $('contractPreview').querySelectorAll('[contenteditable]').forEach((e) => e.removeAttribute('contenteditable'));
+    const st = data.state || {}; st.sig = st.sig || {}; delete st.sig[2]; delete st.link;
+    OQSign.load(st);
+    show('vDoc');
+  }
+  const agreed = () => $('c1').checked && $('c2').checked;
+  OQSign.config({
+    remote: true,
+    canSign() { if (agreed()) return true; $('hint').hidden = false; $('agree').scrollIntoView({ behavior: 'smooth', block: 'center' }); return false; },
+    async onSigned(sig) {
+      const { data, error } = await sb.rpc('sign_submit', { p_token: token, p_last4: last4, p_sig: sig.img, p_ua: navigator.userAgent });
+      if (error) return { ok: false, err: 'تعذّر الإرسال، تأكد من الإنترنت وحاول مرة ثانية.' };
+      if (!data.ok) { if (data.err === 'invalid') { setTimeout(() => show('vBad'), 50); return { ok: false, err: 'الرابط غير صالح أو انتهت صلاحيته.' }; } return { ok: false, err: 'التوقيع ما وصل صح، وقّع مرة ثانية.' }; }
+      return { ok: true, signed_at: data.signed_at, audit: { opened: new Date().toISOString(), signed: data.signed_at, ip: data.ip, ua: navigator.userAgent, hash: info.hash } };
+    },
+    onDone() { $('agree').hidden = true; $('vDone').hidden = false; $('vDone').scrollIntoView({ behavior: 'smooth' }); document.querySelectorAll('.steps span').forEach((s) => s.classList.add('on')); savePdf(); }
+  });
+  $('c1').onchange = $('c2').onchange = () => { if (agreed()) $('hint').hidden = true; };
+  $('goSign').onclick = () => { const b = document.querySelector('[data-sg="2"]'); if (b) { b.scrollIntoView({ behavior: 'smooth', block: 'center' }); b.click(); } };
+
+  async function savePdf() {
+    const canvas = await html2canvas(document.querySelector('.contract-frame'), { scale: 1.5, useCORS: true, backgroundColor: '#ffffff', ignoreElements: (el) => el.classList && el.classList.contains('no-print') });
+    const pdf = new jspdf.jsPDF('p', 'mm', 'a4'), pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight(), iw = pw - 14, ih = canvas.height * iw / canvas.width;
+    let left = ih, y = 0;
+    while (left > 0) {
+      const sh = Math.min(ph - 14, left), c = document.createElement('canvas'); c.width = canvas.width; c.height = Math.max(1, sh / ih * canvas.height);
+      c.getContext('2d').drawImage(canvas, 0, y, canvas.width, c.height, 0, 0, canvas.width, c.height);
+      pdf.addImage(c.toDataURL('image/jpeg', 0.8), 'JPEG', 7, 7, iw, sh); left -= sh; y += c.height; if (left > 0) pdf.addPage();
+    }
+    pdf.save(((info && info.title) || 'عقد').replace(/[\\/:*?"<>|]/g, '') + ' - ' + (info ? info.ref : '') + '.pdf');
+  }
+  $('dl').onclick = savePdf;
+})();
+</script>
+</body>
+</html>

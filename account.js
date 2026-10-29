@@ -39,13 +39,14 @@
   async function setUser(u) {
     const changed = (u && u.id) !== (st.user && st.user.id);
     st.user = u;
-    if (!u) { st.prof = null; adminHide(); paint(); return; }
+    if (!u) { st.prof = null; adminHide(); paint(); if (window.OQSign) OQSign.refresh(); return; }
     if (changed || !st.prof) {
       const { data, error } = await sb.from('profiles').select('*').eq('id', u.id).maybeSingle();
       st.profErr = error ? 'تعذّر قراءة بيانات حسابك من السيرفر: ' + (error.message || error.code) : (!data ? 'حسابك غير موجود في جدول المستخدمين. شغّل ملف قاعدة البيانات ثم سطر المالك.' : '');
       st.prof = data || { name: (u.user_metadata && u.user_metadata.name) || u.email.split('@')[0], email: u.email, plan: 'none' };
     }
     paint();
+    if (window.OQSign) OQSign.refresh();
   }
 
   // ---------- أدوات ----------
@@ -618,7 +619,7 @@
   }
 
   // ---------- تشغيل ----------
-  window.OQ = { ready: READY, draft, open: () => open(), user: () => st.user, isSub, refresh: () => { st.prof = null; return setUser(st.user); } };
+  window.OQ = { ready: READY, draft, open: () => open(), user: () => st.user, isSub, sb: () => sb, isAdmin: () => !!(st.prof && st.prof.is_admin), refresh: () => { st.prof = null; return setUser(st.user); } };
   function boot() {
     mount();
     if (READY) {
