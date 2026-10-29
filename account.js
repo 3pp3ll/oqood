@@ -278,7 +278,7 @@
           <div><label class="form-label" for="lwUrl">رابط المصدر</label><input class="form-control" id="lwUrl" dir="ltr" placeholder="https://laws.boe.gov.sa/..."></div>
         </div>
         <div class="mt-3"><label class="form-label" for="lwFile">ملف النظام (PDF أو Word أو نص)</label><input type="file" class="form-control" id="lwFile" accept=".pdf,.docx,.txt,.html,.htm"></div>
-        <div class="mt-3"><label class="form-label" for="lwText">أو الصق النص هنا</label><textarea class="form-control" id="lwText" rows="5" placeholder="المادة الأولى: ..."></textarea>
+        <div class="mt-3"><label class="form-label" for="lwText">أو الصق النص هنا</label><textarea class="form-control" id="lwText" rows="5" placeholder="المادة الأولى: ...  (أو اسحب ملف وأفلته هنا)"></textarea>
           <p class="adm-hint">أدق طريقة: انسخ النص من موقع هيئة الخبراء (laws.boe.gov.sa) والصقه هنا. بعض ملفات PDF العربية تطلع حروفها مقلوبة.</p></div>
         <div class="d-flex gap-2 mt-3 flex-wrap">
           <button type="button" class="btn btn-outline-primary" data-a="parse">قسّم إلى مواد</button>
@@ -625,7 +625,7 @@
         </div>
         <div class="mt-3"><label class="form-label" for="tpFile">الملف: Word أو PDF، أو صور صفحات العقد (سكانر أو جوال)</label><input type="file" class="form-control" id="tpFile" multiple accept=".pdf,.docx,.txt,.html,.htm,image/*">
           <p class="adm-hint" style="margin:6px 0 0">للصور: اختر كل صفحات العقد مرة وحدة ومرقّمة بالترتيب (1، 2، 3...). العقد المصوّر يقراه الذكاء الاصطناعي ويخفي البيانات الشخصية.</p></div>
-        <div class="mt-3"><label class="form-label" for="tpText">أو الصق نص العقد</label><textarea class="form-control" id="tpText" rows="4"></textarea></div>
+        <div class="mt-3"><label class="form-label" for="tpText">أو الصق نص العقد</label><textarea class="form-control" id="tpText" rows="4" placeholder="الصق النص، أو اسحب الملف أو صور الصفحات وأفلتها هنا"></textarea></div>
         <div class="d-flex gap-2 mt-3 flex-wrap"><button type="button" class="btn btn-outline-primary" data-a="tpRead">اقرأ الملف</button>
           <button type="button" class="btn btn-primary" data-a="tpSave" id="tpSave" disabled>حفظ النموذج</button></div>
         <div class="acc-msg" id="tpMsg" role="status" style="margin:10px 0 0"></div><div id="tpPrev"></div></div>
@@ -721,6 +721,28 @@
     await Promise.all([sb.from('contract_types').update({ ord: ob }).eq('id', A.id), sb.from('contract_types').update({ ord: oa }).eq('id', B.id)]);
     typesChanged();
   }
+
+  // ---------- سحب وإفلات الملفات في مربع الإرفاق أو مربع النص ----------
+  const DROP = { lwFile: ['lwFile', 'parse'], lwText: ['lwFile', 'parse'], tpFile: ['tpFile', 'tpRead'], tpText: ['tpFile', 'tpRead'] };
+  const dropTarget = (e) => { const el = e.target && e.target.closest && e.target.closest('#lwFile,#lwText,#tpFile,#tpText'); return el && DROP[el.id] ? el : null; };
+  const hasFiles = (e) => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
+  document.addEventListener('dragover', (e) => {
+    if (!hasFiles(e) || !document.getElementById('admBody')) return;
+    e.preventDefault(); const el = dropTarget(e);
+    document.querySelectorAll('.oq-drop').forEach((x) => { if (x !== el) x.classList.remove('oq-drop'); });
+    if (el) { el.classList.add('oq-drop'); e.dataTransfer.dropEffect = 'copy'; } else e.dataTransfer.dropEffect = 'none';
+  });
+  document.addEventListener('dragleave', (e) => { const el = dropTarget(e); if (el && !el.contains(e.relatedTarget)) el.classList.remove('oq-drop'); });
+  document.addEventListener('drop', (e) => {
+    if (!hasFiles(e) || !document.getElementById('admBody')) return;
+    e.preventDefault(); document.querySelectorAll('.oq-drop').forEach((x) => x.classList.remove('oq-drop'));
+    const el = dropTarget(e); if (!el) return;
+    const [inputId, act] = DROP[el.id], input = document.getElementById(inputId); if (!input) return;
+    const files = [...e.dataTransfer.files]; if (!files.length) return;
+    const dt = new DataTransfer(); (input.multiple ? files : files.slice(0, 1)).forEach((f) => dt.items.add(f));
+    input.files = dt.files; input.dispatchEvent(new Event('change', { bubbles: true }));
+    const btn = document.querySelector('[data-a="' + act + '"]'); if (btn && !btn.disabled) btn.click();
+  });
 
   // ---------- تشغيل ----------
   window.OQ = { ready: READY, draft, open: () => open(), user: () => st.user, isSub, sb: () => sb, isAdmin: () => !!(st.prof && st.prof.is_admin), refresh: () => { st.prof = null; return setUser(st.user); } };

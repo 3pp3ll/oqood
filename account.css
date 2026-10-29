@@ -70,3 +70,4 @@
 .src-box summary{cursor:pointer;font-weight:700;color:var(--navy)}
 .src-box ol{margin:8px 0 0;padding-inline-start:20px;font-size:.88rem;line-height:1.8}
 .src-box a{color:#2a5f9e}
+.oq-drop{outline:2px dashed #c9a84c!important;outline-offset:3px;background:#fffbeb!important}
