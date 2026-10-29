@@ -517,6 +517,16 @@
 
   // ---------- نماذج العقود ----------
   let tplParsed = '';
+  // إخفاء البيانات الشخصية من النماذج: الإيميل، الجوال، رقم الهوية/الإقامة، الآيبان
+  function maskPII(t) {
+    let n = 0; const D = '[0-9\u0660-\u0669\u06F0-\u06F9]';
+    const sub = (re, rep) => { t = t.replace(re, () => { n++; return rep; }); };
+    sub(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '[البريد الإلكتروني]');
+    sub(/\bSA[0-9]{2}[\s0-9A-Z]{18,30}/gi, '[رقم الآيبان]');
+    sub(new RegExp('(?:\\+|00)?(?:966|٩٦٦)\\s?' + D + '{9}|(?:0|٠)(?:5|٥)' + D + '{8}', 'g'), '[رقم الجوال]');
+    sub(new RegExp('(?<!' + D + ')[12١٢]' + D + '{9}(?!' + D + ')', 'g'), '[رقم الهوية]');
+    return { t, n };
+  }
   function typeOptions(sel) { return `<option value="">كل الأنواع</option>` + typesCache.map((x) => `<option value="${x.id}" ${String(sel) === String(x.id) ? 'selected' : ''}>${esc(x.label)}</option>`).join(''); }
   function renderTemplates() {
     $('#admBody').innerHTML = `<div class="adm-box"><h6>إضافة نموذج عقد</h6>
@@ -581,14 +591,16 @@
       msg('tpMsg', 'جاري القراءة...', true);
       try { if (f) text = (await fileText(f)) + '\n' + text; } catch (x) { return msg('tpMsg', errText(x)); }
       tplParsed = normalize(text);
-      if (!tplParsed) return msg('tpMsg', 'اختر ملف أو الصق النص.');
+      if (!tplParsed) return msg('tpMsg', 'اختر ملف أو الصق النص. (لو الـ PDF صور ممسوحة ما ينقرأ، الصق النص بدالها)');
+      const mk = maskPII(tplParsed); tplParsed = mk.t;
       if (!$('#tpTitle').value.trim() && f) $('#tpTitle').value = f.name.replace(/\.[^.]+$/, '');
       $('#tpSave').disabled = false;
-      $('#tpPrev').innerHTML = `<div class="adm-parsed"><div class="adm-art" style="white-space:pre-wrap">${esc(tplParsed.slice(0, 3000))}${tplParsed.length > 3000 ? '\n…' : ''}</div></div>`;
-      msg('tpMsg', `انقرأ النص، عدد الأحرف ${tplParsed.length}. راجعه ثم احفظ.`, true);
+      $('#tpPrev').innerHTML = `<label class="form-label mt-3" for="tpEdit">النص (تقدر تعدّل عليه قبل الحفظ، مثل حذف أسماء الأشخاص أو المبالغ الخاصة)</label><textarea class="form-control" id="tpEdit" rows="14" dir="auto">${esc(tplParsed)}</textarea>`;
+      msg('tpMsg', `انقرأ النص، عدد الأحرف ${tplParsed.length}.` + (mk.n ? ` انخفى ${mk.n} من البيانات الشخصية (جوال، هوية، إيميل، آيبان).` : '') + ' راجع الأسماء بنفسك ثم احفظ.', true);
     },
     async tpSave() {
       const title = $('#tpTitle').value.trim(); if (!title) return msg('tpMsg', 'اكتب اسم النموذج.');
+      if ($('#tpEdit')) tplParsed = maskPII($('#tpEdit').value.trim()).t;
       if (!tplParsed) return msg('tpMsg', 'اقرأ الملف أولاً.');
       const f = $('#tpFile').files[0];
       const { error } = await sb.from('contract_templates').insert({ title, type_id: Number($('#tpType').value) || null, file_name: f ? f.name : null, body: tplParsed });
