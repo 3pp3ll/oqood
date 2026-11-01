@@ -76,7 +76,21 @@ body{font-family:'Tajawal',sans-serif;background:#efeadf linear-gradient(180deg,
 .key-mask{-webkit-text-security:disc;text-security:disc;font-family:monospace;}
 [dir=rtl] .form-select{background-position:left .75rem center;padding-left:2.5rem;padding-right:.9rem;}
 [dir=ltr] .form-select{background-position:right .75rem center;padding-right:2.5rem;padding-left:.9rem;}
-@media print{.no-print,.editor-toolbar{display:none!important;}.contract-frame{border:5px solid #000;}}
+@media print{
+  @page{size:A4;margin:14mm 12mm 18mm;@bottom-center{content:"صفحة " counter(page) " من " counter(pages);font:9pt Tajawal,Arial,sans-serif;color:#6b7280}}
+  html,body{background:#fff!important;padding:0!important;margin:0!important}
+  .no-print,.editor-toolbar,.header,#oqSearch,#formSection,#sigBar,#oqDraft,#oqFillNote,.form-section:not(.preview-section),#previewSection>*:not(.contract-frame){display:none!important}
+  .container{max-width:none!important;padding:0!important;margin:0!important}
+  .preview-section{display:block!important;background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+  .contract-frame{border:3px solid #0f2744!important;border-radius:0;-webkit-box-decoration-break:clone;box-decoration-break:clone;overflow:visible!important}
+  .contract-paper,.clause-box,#sigBlock{background:#fff!important;min-height:0!important}
+  .clause-box{border:0!important;padding:0 2mm!important}
+  .clause-box p,.clause-box li,.bilingual-table tr,.sg-grid,.sg-party,.sg-audit,.sg-lawyer,.disclaimer{break-inside:avoid;page-break-inside:avoid}
+  .clause-box h3,.clause-box h2{break-after:avoid;page-break-after:avoid}
+  .bilingual-table tr:has(h3){break-after:avoid;page-break-after:avoid}
+  .bilingual-table thead{display:table-header-group}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -600,7 +614,18 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
       formSection.style.display = 'block';
     }
   });
-  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  // طباعة / PDF نصي: المتصفح يطلع PDF بنص حقيقي (ينسخ ويبحث فيه)، والبند ما ينقسم بين صفحتين
+  function printContract(asPdf) {
+    if (!preview.innerText.trim()) { alert('صّغ العقد أولاً'); return; }
+    const old = document.title, t = (document.getElementById('contractTitle').value || 'عقد').replace(/[\\/:*?"<>|]/g, '').trim() || 'عقد';
+    document.title = t + (window.OQSign && OQSign.signed() ? ' - موقّع' : '');
+    const back = () => { document.title = old; window.removeEventListener('afterprint', back); };
+    window.addEventListener('afterprint', back);
+    if (asPdf && !localStorage.getItem('oqood.pdfTip')) { alert('في نافذة الطباعة اختر «حفظ كـ PDF» (Save as PDF) من خانة الطابعة، والعقد ينحفظ نص حقيقي مو صورة.'); try { localStorage.setItem('oqood.pdfTip', '1'); } catch (e) {} }
+    window.print(); setTimeout(back, 1500);
+  }
+  document.getElementById('printBtn').addEventListener('click', () => printContract(false));
+  window.oqPrint = printContract;
 
   document.getElementById('wordBtn').addEventListener('click', () => {
     if (!preview.innerText.trim()) { alert('صّغ العقد أولاً'); return; }
@@ -633,11 +658,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
     const pdf = await window.oqPdf(document.querySelector('.contract-frame'), { ref: window.OQSign && OQSign.state() ? OQSign.state().ref : '' });
     return { pdf, name: safeName };
   };
-  document.getElementById('downloadBtn').addEventListener('click', async () => {
-    if (!preview.innerText.trim()) { alert('صّغ العقد أولاً'); return; }
-    const r = await window.oqMakePdf();
-    r.pdf.save(r.name + (window.OQSign && OQSign.signed() ? ' - موقّع' : '') + '.pdf');
-  });
+  document.getElementById('downloadBtn').addEventListener('click', () => printContract(true));
 
   document.getElementById('saveLocalBtn').addEventListener('click', () => {
     const d = collectData();
@@ -685,12 +706,12 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="editor.js?v=20261029e"></script>
+<script src="editor.js?v=20261101c"></script>
 <script src="account.js?v=20261101b"></script>
 <script src="ref.js?v=20261101a" data-platform="oqood" data-base="https://3pp3ll.github.io/oqood/Contracts.html"></script>
 <script src="install.js?v=20261101a" data-name="عقود" data-key="oqood" data-bottom="76"></script>
 <script src="assist.js?v=20261029k"></script>
 <script src="pdf.js?v=20261101b"></script>
-<script src="sign.js?v=20261029d"></script>
+<script src="sign.js?v=20261101c"></script>
 </body>
 </html>

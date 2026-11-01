@@ -141,7 +141,7 @@
     closePad();
     if (both()) { const d = stamp(); S.doneAt = d.full + ' الساعة ' + d.time; }
     paint(); persist();
-    if (both() && window.oqMakePdf) { try { const r = await window.oqMakePdf(); r.pdf.save(r.name + ' - موقّع.pdf'); } catch (e) {} }
+    if (both() && window.oqPrint) { setTimeout(() => window.oqPrint(true), 300); } else if (both() && window.oqMakePdf) { try { const r = await window.oqMakePdf(); r.pdf.save(r.name + ' - موقّع.pdf'); } catch (e) {} }
   }
 
   /* ---------- المحامي ---------- */
@@ -286,7 +286,7 @@
   document.addEventListener('click', (e) => {
     const b = e.target.closest && e.target.closest('[data-sg]'); if (b && S && canTap(+b.dataset.sg)) { e.preventDefault(); openPad(b.dataset.sg); return; }
     const a = e.target.closest && e.target.closest('[data-sga]'); if (!a || !S) return;
-    if (a.dataset.sga === 'pdf') window.oqMakePdf && window.oqMakePdf().then((r) => r.pdf.save(r.name + ' - موقّع.pdf'));
+    if (a.dataset.sga === 'pdf') { if (window.oqPrint) window.oqPrint(true); else if (window.oqMakePdf) window.oqMakePdf().then((r) => r.pdf.save(r.name + ' - موقّع.pdf')); }
     if (a.dataset.sga === 'lawyer') sendLawyer();
     if (a.dataset.sga === 'link') { linkForm = true; linkErr = ''; paint(); setTimeout(() => $('sgPhone') && $('sgPhone').focus(), 0); }
     if (a.dataset.sga === 'nolink') { linkForm = false; paint(); }

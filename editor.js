@@ -41,6 +41,20 @@
       if (t.length < 90 && /(التوقيعات|التواقيع|التوقيع|Signatures?)\s*:?\s*$/i.test(t)) el.remove();
     });
     box.querySelectorAll('table').forEach((t) => { if (!t.querySelector('td,th')) t.remove(); });
+    // الجدول الثنائي: كل نقطة (عربي + إنجليزي) في صف لحالها، عشان ما تنقسم النقطة بين صفحتين ويبقى الطرفين متقابلين
+    box.querySelectorAll('table.bilingual-table tr').forEach((tr) => {
+      const ar = tr.querySelector('td.ar'), en = tr.querySelector('td.en'); if (!ar || !en) return;
+      const parts = (td) => { const out = []; [...td.childNodes].forEach((n) => {
+        if (n.nodeType === 3) { if (n.textContent.trim()) out.push('<p>' + n.textContent.trim() + '</p>'); return; }
+        if (n.nodeType !== 1) return;
+        if (/^(OL|UL)$/.test(n.tagName)) { let k = +(n.getAttribute('start') || 1); [...n.children].forEach((li) => out.push('<p>' + (n.tagName === 'OL' ? '<b>' + (k++) + '.</b> ' : '• ') + li.innerHTML + '</p>')); }
+        else out.push(n.outerHTML); }); return out; };
+      const A = parts(ar), E = parts(en);
+      if (A.length < 2 || A.length !== E.length) return;
+      const frag = document.createDocumentFragment();
+      A.forEach((h, i) => { const r = document.createElement('tr'); r.innerHTML = '<td class="ar">' + h + '</td><td class="en">' + E[i] + '</td>'; frag.appendChild(r); });
+      tr.replaceWith(frag);
+    });
     return box.innerHTML;
   };
 
