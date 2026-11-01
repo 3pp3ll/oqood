@@ -38,6 +38,29 @@
     }
     return from;
   }
+  // html2canvas ما يطبّق قواعد الاتجاه العربي على الأقواس وأرقام القوائم، فنصلحها في النسخة اللي تتصور بس
+  function rtlFix(root) {
+    const isR = (el) => el && getComputedStyle(el).direction === 'rtl';
+    root.querySelectorAll('ol,ul').forEach((list) => {
+      if (!isR(list)) return;
+      let n = +(list.getAttribute('start') || 1);
+      [...list.children].filter((li) => li.tagName === 'LI').forEach((li) => {
+        const m = document.createElement('span'); m.textContent = list.tagName === 'OL' ? (n++) + '. ' : '• ';
+        m.style.cssText = 'font-weight:700;margin-inline-end:4px'; li.insertBefore(m, li.firstChild);
+        li.style.listStyle = 'none';
+      });
+      list.style.paddingInlineStart = '0'; list.style.listStyle = 'none';
+    });
+    // خط أميري يقلب الأقواس في الصورة، فنرسم الأقواس بخط عادي داخل النص العربي (المتصفح يرتّبها صح)
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = []; while (w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach((t) => {
+      if (!/[()\[\]{}]/.test(t.nodeValue) || !/[\u0600-\u06FF]/.test(t.nodeValue) || !isR(t.parentElement)) return;
+      const f = document.createDocumentFragment();
+      t.nodeValue.split(/([()\[\]{}])/).forEach((part) => { if (!part) return; if (/^[()\[\]{}]$/.test(part)) { const sp = document.createElement('span'); sp.textContent = part; sp.style.fontFamily = 'Arial, Helvetica, sans-serif'; f.appendChild(sp); } else f.appendChild(document.createTextNode(part)); });
+      t.parentNode.replaceChild(f, t);
+    });
+  }
   window.oqPdf = async function (frame, opt) {
     opt = opt || {};
     const wpx = Math.round(CW * PXMM);
@@ -55,6 +78,7 @@
     const sig = clone.querySelector('.sg-grid'); if (sig) { sig.parentElement.style.padding = '0 4px 4px'; }
     [...clone.children].forEach((c) => { c.style.background = '#fff'; });
     holder.appendChild(clone); document.body.appendChild(holder);
+    rtlFix(clone);
     try {
       if (document.fonts && document.fonts.ready) await document.fonts.ready;
       // نقاط القطع المسموحة: بداية كل بند، ما عدا اللي قبله عنوان
