@@ -133,7 +133,9 @@ body{font-family:'Tajawal',sans-serif;background:#efeadf linear-gradient(180deg,
           <option value="partnership">عقد شراكة</option>
           <option value="general">اتفاق عام</option>
           <option value="nda">اتفاقية سرية (مستقلة)</option>
-        </select></div>
+          <option value="__other">أخرى…</option>
+        </select>
+        <input class="form-control mt-2" id="contractTypeOther" placeholder="اكتب نوع العقد، مثل: استشارة مالية" hidden autocomplete="off" aria-label="نوع العقد (أخرى)"></div>
       <div class="col-md-6"><label class="form-label"><span id="lblTitle">عنوان العقد</span> <span class="req">*</span></label>
         <input class="form-control" id="contractTitle" placeholder="مثال: تقديم استشارة تقنية"></div>
       <div class="col-md-6"><label class="form-label" id="lblDate">التاريخ</label><input type="date" class="form-control" id="contractDate"></div>
@@ -261,7 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const sel = document.getElementById('contractType'), cur = sel.options[sel.selectedIndex]?.text;
       const opt = t => `<option value="${t.id}" data-law="${escH(t.law || '')}">${escH(t.label)}</option>`;
       const groups = []; types.forEach(t => { const g = t.grp || ''; let G = groups.find(x => x.g === g); if (!G) groups.push(G = { g, list: [] }); G.list.push(t); });
-      sel.innerHTML = groups.map(G => G.g ? `<optgroup label="${escH(G.g)}">${G.list.map(opt).join('')}</optgroup>` : G.list.map(opt).join('')).join('');
+      sel.innerHTML = groups.map(G => G.g ? `<optgroup label="${escH(G.g)}">${G.list.map(opt).join('')}</optgroup>` : G.list.map(opt).join('')).join('') + '<option value="__other">أخرى…</option>';
       const keep = [...sel.options].find(o => o.text === cur); if (keep) sel.value = keep.value;
     }
   };
@@ -416,7 +418,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function collectData() {
     return {
-      typeLabel: document.getElementById('contractType').options[document.getElementById('contractType').selectedIndex].text,
+      typeLabel: typeOther() || document.getElementById('contractType').options[document.getElementById('contractType').selectedIndex].text,
+      typeOther: typeOther(),
       typeLaw: document.getElementById('contractType').selectedOptions[0]?.dataset.law || '',
       typeId: /^\d+$/.test(document.getElementById('contractType').value) ? document.getElementById('contractType').value : '',
       title: document.getElementById('contractTitle').value,
@@ -437,8 +440,24 @@ document.addEventListener('DOMContentLoaded', function() {
     return new Date(d).toLocaleDateString('ar-SA', { year:'numeric', month:'long', day:'numeric' });
   }
 
+  // «أخرى»: تكتب نوع العقد بنفسك، ولو كنت المالك ينضاف للقائمة (عقود أخرى) عشان يطلع لك المرة الجاية
+  function typeOther() { const s = document.getElementById('contractType'), o = document.getElementById('contractTypeOther'); return s && s.value === '__other' && o ? o.value.trim().replace(/\s+/g, ' ').slice(0, 60) : ''; }
+  document.getElementById('contractType').addEventListener('change', e => { const o = document.getElementById('contractTypeOther'); o.hidden = e.target.value !== '__other'; if (!o.hidden) o.focus(); });
+  async function addOtherType(label) {
+    try {
+      if (!(window.OQ && OQ.isAdmin && OQ.isAdmin() && OQ.sb)) return;
+      const sb = OQ.sb(), lab = /^(عقد|اتفاقية|اتفاق)\s/.test(label) ? label : 'عقد ' + label;
+      if ([...document.querySelectorAll('#contractType option')].some(x => x.text.trim() === lab)) return;
+      const { data: ex } = await sb.from('contract_types').select('id').eq('label', lab).limit(1); if (ex && ex.length) return;
+      let { error } = await sb.from('contract_types').insert({ label: lab, grp: 'عقود أخرى', law: 'نظام المعاملات المدنية', ord: 590, active: true });
+      if (error && /grp|law|column/.test(error.message)) await sb.from('contract_types').insert({ label: lab, ord: 590, active: true });
+      if (OQ.reloadTypes) { await OQ.reloadTypes(); const o = [...document.querySelectorAll('#contractType option')].find(x => x.text.trim() === lab); if (o) { document.getElementById('contractType').value = o.value; document.getElementById('contractTypeOther').hidden = true; document.getElementById('contractTypeOther').value = ''; } }
+    } catch (e) {}
+  }
   async function generateWithAI() {
     const d = collectData();
+    if (document.getElementById('contractType').value === '__other' && !d.typeOther) { const o = document.getElementById('contractTypeOther'); o.focus(); alert('اكتب نوع العقد في الخانة تحت «أخرى».'); return; }
+    if (d.typeOther) addOtherType(d.typeOther);
     const useServer = !!(window.OQ && OQ.ready);
     const key = localStorage.getItem('oqood_openrouter_key') || '';
     if (useServer && !OQ.user()) { OQ.open(); return; }
