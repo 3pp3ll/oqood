@@ -208,6 +208,7 @@
       const { data, error } = await sb.auth.signUp({ email: em, password: pw, options: { data: { name: nm }, emailRedirectTo: PAGE } });
       busy(f, false);
       if (error) return msg('suMsg', errText(error));
+      if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length && window.REF) REF.signup();
       if (data && data.user && Array.isArray(data.user.identities) && !data.user.identities.length) return msg('suMsg', 'هذا الإيميل مسجّل. سجّل دخولك أو استعد كلمة المرور.');
       if (!data.session) msg('suMsg', 'أرسلنا لك رابط تأكيد على إيميلك. افتحه وبعدها سجّل دخولك.', true);
     } else if (f.id === 'accReset') {
@@ -264,8 +265,9 @@
         <button type="button" role="tab" data-tab="types" aria-selected="${admTab === 'types'}">أنواع العقود</button>
         <button type="button" role="tab" data-tab="users" aria-selected="${admTab === 'users'}">المشتركين</button>
         <button type="button" role="tab" data-tab="settings" aria-selected="${admTab === 'settings'}">إعدادات الموقع</button>
+        <button type="button" role="tab" data-tab="refs" aria-selected="${admTab === 'refs'}">الإحالات</button>
       </div><div id="admBody"></div>`;
-    ({ laws: renderLaws, templates: renderTemplates, types: renderTypes, users: renderUsers, settings: renderSettings })[admTab]();
+    ({ laws: renderLaws, templates: renderTemplates, types: renderTypes, users: renderUsers, settings: renderSettings, refs: renderRefs })[admTab]();
   }
 
   function renderLaws() {
@@ -578,7 +580,26 @@
           : `<input class="form-control" id="set_${k}" ${['model', 'ocrModel', 'lawyerWhatsapp', 'lawyerEmail'].includes(k) ? 'dir="ltr"' : ''} placeholder="${esc(ph)}" value="${esc(S[k] || '')}">`}</div>`).join('')}
       <p class="adm-hint" style="margin:-6px 0 12px">النموذج يُكتب بصيغة OpenRouter مثل <span dir="ltr">openai/gpt-4o-mini</span> أو <span dir="ltr">anthropic/claude-sonnet-4.5</span>. اتركه فاضي للافتراضي.</p>
       <button type="button" class="btn btn-primary" data-a="saveSettings">حفظ الإعدادات</button>
-      <div class="acc-msg" id="setMsg" role="status" style="margin:10px 0 0"></div></div>`;
+      <div class="acc-msg" id="setMsg" role="status" style="margin:10px 0 0"></div></div>
+      <div class="adm-box" id="refBox"></div>`;
+    if (window.REF) REF.panel($('#refBox'), { title: 'روابط الإحالة لعقود' });
+  }
+  // ---------- الإحالات: كل المنصات ----------
+  const PLAT = { meras: 'مِراس', oqood: 'عقود', milkia: 'مِلْكية', adstudio: 'منطاد (الاستوديو)', darbi: 'دربي', manafsak: 'مع نفسك' };
+  async function renderRefs() {
+    $('#admBody').innerHTML = `<div class="adm-box"><h6>الإحالات في كل المنصات</h6>
+      <p class="adm-hint" style="margin:0 0 10px">كل رابط إحالة من أي منصة: كم زيارة وكم تسجيل. تعمل الروابط من إعدادات كل منصة (هنا في «إعدادات الموقع» لعقود).</p>
+      <div id="refAll"><p class="text-muted small">جاري التحميل...</p></div>
+      <button type="button" class="btn btn-sm btn-outline-secondary mt-2" data-a="refReload">تحديث</button></div>`;
+    const { data, error } = await sb.rpc('ref_stats_all');
+    const box = $('#refAll'); if (!box) return;
+    if (error) { box.innerHTML = `<p class="text-danger small">${/ref_stats_all|function/.test(error.message) ? 'شغّل ملف refs.sql في Supabase أول.' : esc(errText(error))}</p>`; return; }
+    if (!data || !data.length) { box.innerHTML = '<p class="text-muted small m-0">ما فيه زيارات من روابط إحالة للحين.</p>'; return; }
+    const by = {}; data.forEach((r) => { (by[r.platform] = by[r.platform] || []).push(r); });
+    const n = (x) => Number(x || 0).toLocaleString('ar-SA-u-nu-latn');
+    box.innerHTML = Object.keys(by).map((p) => { const L = by[p], tv = L.reduce((a, r) => a + +r.visits, 0), ts = L.reduce((a, r) => a + +r.signups, 0);
+      return `<div class="mb-3"><b>${esc(PLAT[p] || p)}</b> <span class="adm-tag">${n(tv)} زيارة · ${n(ts)} تسجيل</span>
+        <table class="table table-sm mt-1 mb-0"><thead><tr><th>الرابط</th><th>زيارات</th><th>تسجيلات</th><th>آخر 7 أيام</th></tr></thead><tbody>${L.map((r) => `<tr><td dir="ltr" class="text-start"><b>${esc(r.code)}</b></td><td>${n(r.visits)}</td><td><b>${n(r.signups)}</b></td><td>${n(r.visits7)} / ${n(r.signups7)}</td></tr>`).join('')}</tbody></table></div>`; }).join('');
   }
 
   // ---------- أنواع العقود ----------
@@ -655,6 +676,7 @@
 
   const confirmBtn = (b, label) => { if (b.dataset.sure === '1') return true; b.dataset.sure = '1'; const o = b.textContent; b.textContent = label; setTimeout(() => { if (b.isConnected) { b.dataset.sure = ''; b.textContent = o; } }, 4000); return false; };
   const EXTRA = {
+    refReload() { return renderRefs(); },
     async saveSettings() {
       const v = {}; SET_FIELDS.forEach(([k]) => { v[k] = $('#set_' + k).value.trim(); });
       const { error } = await sb.from('site_settings').upsert({ key: 'site', value: v, updated_at: new Date().toISOString() });
