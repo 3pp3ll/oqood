@@ -229,7 +229,11 @@
     const { data, error } = await sb.functions.invoke('draft', { body: { ...payload, userKey: isSub() ? '' : ownKey() } });
     if (error) {
       let m = error.message;
-      try { const j = await error.context.json(); if (j && j.error) { m = j.error; if (j.code === 'nokey') open(); } } catch (x) {}
+      const st = error.context && error.context.status;
+      let got = false;
+      try { const j = await error.context.json(); if (j && j.error) { got = true; m = j.error; if (j.code === 'nokey') open(); } } catch (x) {}
+      if (!got && (st === 546 || st === 504 || st === 408)) m = 'الصياغة أخذت وقت أطول من المسموح في السيرفر (' + st + '). جرّب مرة ثانية، أو اختصر «ما تريده في العقد»، أو استخدم نموذج أسرع.';
+      else if (!got && st) m = 'السيرفر رجّع خطأ (' + st + '). افتح Supabase ← Edge Functions ← draft ← Logs وصوّر آخر سطر.';
       throw new Error(m);
     }
     return data;

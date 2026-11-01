@@ -177,7 +177,7 @@ ${body.uploadedText ? "\nنص مرفوع للاستفادة من بنوده:\n" 
         "HTTP-Referer": req.headers.get("origin") || "https://3pp3ll.github.io",
         "X-Title": "Oqood",
       },
-      body: JSON.stringify({ model, temperature: 0.2, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
+      body: JSON.stringify({ model, temperature: 0.2, max_tokens: 7000, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
     });
   } catch (e) {
     return json({ error: "تعذّر الاتصال بخدمة الصياغة." }, 502);
