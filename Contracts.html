@@ -41,10 +41,12 @@ body{font-family:'Tajawal',sans-serif;background:#efeadf linear-gradient(180deg,
 .header{position:relative;overflow:hidden;background:linear-gradient(135deg,#0f2142 0%,#1b3d6e 60%,#25508a 100%);color:#fff;padding:22px 24px;border-radius:22px;margin-bottom:22px;box-shadow:0 12px 32px rgba(15,39,68,.16);}
 .header::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;border:1.5px solid rgba(201,168,76,.28);left:-110px;bottom:-170px;pointer-events:none}
 .header>*{position:relative}
-.saved-note{font-size:.84rem;color:#5c6b7a;margin:12px 0 0;display:flex;gap:6px;align-items:flex-start}
-.site-foot{margin:26px 0 30px;padding:16px 18px;border-top:1px solid #ddd3c2;color:#5c6b7a;font-size:.82rem;line-height:1.8;text-align:center}
-.site-foot p{margin:0 0 6px}
-.site-foot b{color:#0f2744}
+.saved-note{font-size:.9rem;font-weight:500;color:#1f2937;background:#e9ebee;border:1px solid #dcdfe4;border-radius:12px;padding:10px 14px;margin:12px 0 0;display:flex;gap:8px;align-items:flex-start}
+.site-foot{margin:26px 0 30px;color:#1f2937;font-size:.92rem;line-height:1.85;display:grid;gap:12px}
+.sf-box{background:#e9ebee;border:1px solid #dcdfe4;border-radius:14px;padding:14px 18px}
+.sf-h{font-family:'Tajawal',sans-serif;font-size:1.05rem;font-weight:800;color:#0f2744;margin:0 0 6px}
+.sf-box p{margin:0;font-weight:500}
+.sf-rights{margin:0;background:#e9ebee;border:1px solid #dcdfe4;border-radius:14px;padding:12px 18px;font-weight:800;color:#111827;text-align:center}
 .header .tag3{font-size:.82rem;color:rgba(255,255,255,.82);margin:4px 0 0;letter-spacing:.01em}
 .header h1{font-family:'Amiri',serif;font-weight:700;font-size:2.1rem;margin:0;}
 .header .lead{color:#e9cf86;font-weight:700;font-size:.98rem;margin-top:2px;opacity:1}
@@ -259,9 +261,11 @@ body{font-family:'Tajawal',sans-serif;background:#efeadf linear-gradient(180deg,
   </div>
 
   <footer class="site-foot no-print" role="contentinfo">
-    <p><b>عقود</b> منصة إلكترونية لمساعدتك في صياغة العقود، وهي اجتهاد شخصي وليست شركة محاماة ولا مكتب استشارات قانونية، وما تغني عن مراجعة محامٍ مرخّص في العقود المهمة.</p>
-    <p>عند إنشاء حساب في المنصة: تُحفظ نسخة من هيكل العقود التي تصيغها في قاعدة بيانات المنصة بعد حذف البيانات الشخصية (الأسماء والهويات والجوالات والإيميلات وتواريخ الميلاد)، وذلك لتحسين جودة الصياغة. العقد الكامل ببياناته يبقى في جهازك فقط.</p>
-    <p>تأسست المنصة عام 2027م · © جميع الحقوق محفوظة لـ«عقود». يُمنع نسخ المنصة أو تصميمها أو محتواها أو إعادة نشرها أو انتحال اسمها دون إذن مكتوب.</p>
+    <section class="sf-box"><h2 class="sf-h">عقود</h2>
+      <p>منصة إلكترونية لمساعدتك في صياغة العقود، وهي اجتهاد شخصي وليست شركة محاماة ولا مكتب استشارات قانونية، وما تغني عن مراجعة محامٍ مرخّص في العقود المهمة.</p></section>
+    <section class="sf-box"><h2 class="sf-h">آلية الحفظ السحابي</h2>
+      <p>عند إنشاء حساب في المنصة: تُحفظ نسخة من هيكل العقود التي تصيغها في قاعدة بيانات المنصة بعد حذف البيانات الشخصية (الأسماء والهويات والجوالات والإيميلات وتواريخ الميلاد)، وذلك لتحسين جودة الصياغة. العقد الكامل ببياناته يبقى في جهازك فقط.</p></section>
+    <p class="sf-rights">تأسست المنصة عام 2026م · © جميع الحقوق محفوظة لـ«عقود». يُمنع نسخ المنصة أو تصميمها أو محتواها أو إعادة نشرها أو انتحال اسمها دون إذن مكتوب.</p>
   </footer>
 </div>
 
