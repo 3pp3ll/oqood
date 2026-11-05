@@ -37,13 +37,15 @@ language sql immutable set search_path = public, extensions as $$
   select encode(extensions.digest(convert_to(t, 'UTF8'), 'sha256'), 'hex')
 $$;
 
--- إنشاء رابط (للمالك فقط)
+-- إنشاء رابط (للمالك والمشتركين)
 create or replace function public.sign_create(p_token text, p_last4 text, p_days int, p_ref text, p_title text,
   p_p1 text, p_p2 text, p_html text, p_state jsonb) returns json
 language plpgsql security definer set search_path = public, extensions as $$
 declare r public.sign_links;
 begin
-  if auth.uid() is null or not public.is_admin() then raise exception 'not allowed'; end if;
+  -- المالك، أو أي مشترك فعّال (خطته «مشترك» وما انتهى اشتراكه)
+  if auth.uid() is null or not (public.is_admin() or exists (select 1 from public.profiles p where p.id = auth.uid()
+      and p.plan = 'sub' and (p.sub_until is null or p.sub_until >= current_date))) then raise exception 'not allowed'; end if;
   if length(coalesce(p_token,'')) < 24 then raise exception 'bad token'; end if;
   if p_last4 !~ '^[0-9]{4}$' then raise exception 'bad last4'; end if;
   if length(p_html) > 400000 or length(p_state::text) > 400000 then raise exception 'too large'; end if;

@@ -161,7 +161,8 @@
 
   /* ---------- رابط التوقيع عن بُعد ---------- */
   const OQ = () => window.OQ || {};
-  const isOwner = () => !CFG.remote && !!(OQ().isAdmin && OQ().isAdmin());
+  // روابط التوقيع: للمالك وأي مشترك فعّال (كل واحد يشوف روابطه بس)
+  const isOwner = () => !CFG.remote && !!((OQ().isAdmin && OQ().isAdmin()) || (OQ().isSub && OQ().isSub()));
   const client = () => OQ().sb && OQ().sb();
   const tokens = () => { try { return JSON.parse(localStorage.getItem('oqood.links') || '{}'); } catch (e) { return {}; } };
   const linkUrl = (t) => new URL('s.html#k=' + t, location.href).href;
@@ -177,10 +178,10 @@
     }
     if (!linkForm || !S.sig[1] || S.sig[2]) return '';
     return '<div class="sg-link"><b>رابط توقيع للطرف الثاني: ' + esc(S.p2) + '</b>' +
-      '<div class="sg-lf"><label>جوال الطرف الثاني<input type="tel" id="sgPhone" dir="ltr" inputmode="tel" placeholder="05xxxxxxxx" autocomplete="off"></label>' +
+      '<div class="sg-lf"><label>جوال الطرف الثاني<input type="tel" id="sgPhone" dir="ltr" inputmode="tel" placeholder="05xxxxxxxx أو +971…" autocomplete="off"></label>' +
       '<label>صلاحية الرابط<select id="sgDays"><option value="3">3 أيام</option><option value="7" selected>7 أيام</option><option value="14">14 يوم</option></select></label></div>' +
       '<div class="sg-actions"><button type="button" class="btn btn-sm btn-primary" data-sga="mklink">إنشاء الرابط</button><button type="button" class="btn btn-sm btn-outline-secondary" data-sga="nolink">إلغاء</button><span class="sg-err" role="status">' + esc(linkErr) + '</span></div>' +
-      '<p class="sg-note">العقد يتجمّد بنصه الحالي وتوقيعك، وما يقدر العميل يغيّر فيه شي. رقم الجوال ما ينحفظ في السيرفر، بس بصمة آخر 4 أرقام للتحقق.</p></div>';
+      '<p class="sg-note">العميل خارج السعودية؟ اكتب رقمه مع مفتاح الدولة (مثل +971 أو +20) عشان يفتح الواتساب صح. العقد يتجمّد بنصه الحالي وتوقيعك، وما يقدر العميل يغيّر فيه شي. رقم الجوال ما ينحفظ في السيرفر، بس بصمة آخر 4 أرقام للتحقق.</p></div>';
   }
   function rndToken() { const b = new Uint8Array(24); crypto.getRandomValues(b); return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   async function makeLink() {
@@ -198,7 +199,7 @@
   }
   function waLink() {
     const t = tokens()[S.link.id]; if (!t) return;
-    let ph = String(S.link.phone || '').replace(/\D/g, ''); if (/^05\d{8}$/.test(ph)) ph = '966' + ph.slice(1);
+    let ph = String(S.link.phone || '').replace(/\D/g, ''); if (/^05\d{8}$/.test(ph)) ph = '966' + ph.slice(1); else if (/^00/.test(ph)) ph = ph.slice(2);
     const msg = 'السلام عليكم ' + S.p2 + '، هذا رابط توقيع عقد «' + (S.title || 'العقد') + '» رقم ' + S.ref + ':\n' + linkUrl(t) + '\nللدخول اكتب آخر 4 أرقام من جوالك. الرابط لك أنت فقط ويشتغل مرة وحدة.';
     window.open('https://wa.me/' + ph + '?text=' + encodeURIComponent(msg), '_blank');
   }
