@@ -583,6 +583,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
       `;
 
       if (window.OQSign) OQSign.reset({ p1: d.p1.name, p2: d.p2.name, title: d.title });
+      if (window.OQ && OQ.cloudSave) OQ.cloudSave(d, preview.innerHTML);
       const sb = document.getElementById('sourcesBox');
       sb.hidden = !sources.length;
       sb.innerHTML = sources.length ? `<details><summary>المواد النظامية اللي رجعت لها المنصة (${sources.length})</summary><ol>${sources.map(s => `<li>${escH(s.law)} — ${escH(s.num)}${s.url ? ` · <a href="${escH(s.url)}" target="_blank" rel="noopener">المصدر</a>` : ''}</li>`).join('')}</ol><p class="small text-muted mb-0">هذي المواد اللي أُعطيت للصياغة. المواد اللي استند لها العقد فعلاً مذكورة في قسم «المرجعية النظامية» آخر العقد.</p></details>` : '';
@@ -707,7 +708,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="editor.js?v=20261101c"></script>
-<script src="account.js?v=20261101b"></script>
+<script src="account.js?v=20261105a"></script>
 <script src="ref.js?v=20261101a" data-platform="oqood" data-base="https://3pp3ll.github.io/oqood/Contracts.html"></script>
 <script src="install.js?v=20261101a" data-name="عقود" data-key="oqood" data-bottom="76"></script>
 <script src="assist.js?v=20261029k"></script>

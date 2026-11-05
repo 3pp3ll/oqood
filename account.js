@@ -270,8 +270,9 @@
         <button type="button" role="tab" data-tab="users" aria-selected="${admTab === 'users'}">المشتركين</button>
         <button type="button" role="tab" data-tab="settings" aria-selected="${admTab === 'settings'}">إعدادات الموقع</button>
         <button type="button" role="tab" data-tab="refs" aria-selected="${admTab === 'refs'}">الإحالات</button>
+        <button type="button" role="tab" data-tab="cloud" aria-selected="${admTab === 'cloud'}">عقود المستخدمين</button>
       </div><div id="admBody"></div>`;
-    ({ laws: renderLaws, templates: renderTemplates, types: renderTypes, users: renderUsers, settings: renderSettings, refs: renderRefs })[admTab]();
+    ({ laws: renderLaws, templates: renderTemplates, types: renderTypes, users: renderUsers, settings: renderSettings, refs: renderRefs, cloud: renderCloud })[admTab]();
   }
 
   function renderLaws() {
@@ -588,6 +589,31 @@
       <div class="adm-box" id="refBox"></div>`;
     if (window.REF) REF.panel($('#refBox'), { title: 'روابط الإحالة لعقود' });
   }
+  // ---------- عقود المستخدمين (محفوظات سحابية بدون بيانات شخصية) ----------
+  let cloudRows = [], cloudUsers = {};
+  async function renderCloud() {
+    $('#admBody').innerHTML = `<div class="adm-box"><h6>عقود المستخدمين</h6>
+      <p class="adm-hint" style="margin:0 0 10px">كل عقد ينصاغ في المنصة ينحفظ هنا تلقائياً بعد شطب الأسماء والهويات والجوالات والإيميلات وتواريخ الميلاد. تقدر تعرضه، أو تحفظه كنموذج يستفيد منه الذكاء الاصطناعي.</p>
+      <div class="d-flex gap-2 flex-wrap mb-2"><input class="form-control" id="clQ" type="search" placeholder="ابحث بالعنوان أو النوع أو المستخدم" style="max-width:340px"><button type="button" class="btn btn-sm btn-outline-secondary" data-a="clReload">تحديث</button></div>
+      <div class="adm-wrap" id="clRows"><p class="text-muted small">جاري التحميل...</p></div><div id="clView"></div></div>`;
+    $('#clQ').addEventListener('input', drawCloud);
+    const { data, error } = await sb.from('saved_contracts').select('id,owner,title,type_label,lang,created_at').order('created_at', { ascending: false }).limit(300);
+    if (error) { $('#clRows').innerHTML = `<p class="text-danger small">${/saved_contracts|schema cache|does not exist/.test(error.message) ? 'شغّل ملف cloud.sql في Supabase أول.' : esc(errText(error))}</p>`; return; }
+    cloudRows = data || [];
+    const ids = [...new Set(cloudRows.map((r) => r.owner))];
+    if (ids.length) { const { data: ps } = await sb.from('profiles').select('id,name,email').in('id', ids); cloudUsers = {}; (ps || []).forEach((p) => { cloudUsers[p.id] = p; }); }
+    drawCloud();
+  }
+  function drawCloud() {
+    const q = ($('#clQ') && $('#clQ').value || '').trim().toLowerCase(), L = { ar: 'عربي', en: 'English', both: 'لغتين' };
+    const rows = cloudRows.filter((r) => { const u = cloudUsers[r.owner] || {}; return !q || [r.title, r.type_label, u.name, u.email].join(' ').toLowerCase().includes(q); });
+    $('#clRows').innerHTML = rows.length ? `<table class="table table-sm align-middle"><thead><tr><th>العقد</th><th>النوع</th><th>اللغة</th><th>المستخدم</th><th>التاريخ</th><th></th></tr></thead><tbody>${rows.map((r) => { const u = cloudUsers[r.owner] || {};
+      return `<tr><td><b>${esc(r.title || '—')}</b></td><td>${esc(r.type_label || '')}</td><td>${L[r.lang] || ''}</td><td>${esc(u.name || '')}<div class="text-muted small" dir="ltr">${esc(u.email || '')}</div></td><td class="small">${new Date(r.created_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn')}</td>
+        <td class="text-nowrap"><button type="button" class="btn btn-sm btn-outline-primary" data-a="clView" data-id="${r.id}">عرض</button> <button type="button" class="btn btn-sm btn-outline-success" data-a="clTpl" data-id="${r.id}">نموذج</button> <button type="button" class="btn btn-sm btn-outline-danger" data-a="clDel" data-id="${r.id}">حذف</button></td></tr>`; }).join('')}</tbody></table>`
+      : '<p class="text-muted small m-0">ما فيه عقود محفوظة للحين.</p>';
+  }
+  async function cloudGet(id) { const { data, error } = await sb.from('saved_contracts').select('*').eq('id', id).maybeSingle(); if (error) throw error; return data; }
+
   // ---------- الإحالات: كل المنصات ----------
   const PLAT = { meras: 'مِراس', oqood: 'عقود', milkia: 'مِلْكية', adstudio: 'منطاد (الاستوديو)', darbi: 'دربي', manafsak: 'مع نفسك' };
   async function renderRefs() {
@@ -681,6 +707,25 @@
   const confirmBtn = (b, label) => { if (b.dataset.sure === '1') return true; b.dataset.sure = '1'; const o = b.textContent; b.textContent = label; setTimeout(() => { if (b.isConnected) { b.dataset.sure = ''; b.textContent = o; } }, 4000); return false; };
   const EXTRA = {
     refReload() { return renderRefs(); },
+    clReload() { return renderCloud(); },
+    async clView(b) {
+      const r = await cloudGet(b.dataset.id); if (!r) return;
+      $('#clView').innerHTML = `<div class="mt-3" style="border:4px solid #0f2744;border-radius:4px;background:#fff;padding:18px"><div class="d-flex justify-content-between align-items-center mb-2"><b>${esc(r.title || '')}</b><button type="button" class="btn btn-sm btn-outline-secondary" data-a="clClose">إغلاق</button></div><div class="contract-paper" style="min-height:0;padding:0"><div class="clause-box">${r.html}</div></div></div>`;
+      $('#clView').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+    clClose() { $('#clView').innerHTML = ''; },
+    async clTpl(b) {
+      const r = await cloudGet(b.dataset.id); if (!r) return;
+      const tmp = document.createElement('div'); tmp.innerHTML = r.html; const body = tmp.innerText.replace(/\n{3,}/g, '\n\n').trim();
+      const ty = typesCache.find((x) => x.label === r.type_label);
+      const { error } = await sb.from('contract_templates').insert({ title: (r.title || 'نموذج') + ' (من عقود المستخدمين)', type_id: ty ? ty.id : null, body: body.slice(0, 60000) });
+      b.textContent = error ? 'تعذّر' : 'انحفظ ✓'; b.disabled = !error;
+    },
+    async clDel(b) {
+      if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'متأكد؟'; return; }
+      const { error } = await sb.from('saved_contracts').delete().eq('id', b.dataset.id);
+      if (!error) { cloudRows = cloudRows.filter((r) => String(r.id) !== b.dataset.id); drawCloud(); }
+    },
     async saveSettings() {
       const v = {}; SET_FIELDS.forEach(([k]) => { v[k] = $('#set_' + k).value.trim(); });
       const { error } = await sb.from('site_settings').upsert({ key: 'site', value: v, updated_at: new Date().toISOString() });
@@ -780,7 +825,35 @@
   });
 
   // ---------- تشغيل ----------
-  window.OQ = { ready: READY, draft, open: () => open(), user: () => st.user, isSub, sb: () => sb, isAdmin: () => !!(st.prof && st.prof.is_admin), isIn: () => !!st.user, reloadTypes: () => loadSite(), refresh: () => { st.prof = null; return setUser(st.user); } };
+  // ---------- الحفظ السحابي: هيكل العقد بدون بيانات شخصية ----------
+  function anonHtml(html, d) {
+    const box = document.createElement('div'); box.innerHTML = html;
+    box.querySelectorAll('img,script,style').forEach((n) => n.remove());
+    const fmt = (v) => { try { return v ? new Date(v).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn') : ''; } catch (e) { return ''; } };
+    const pairs = [];
+    [['p1', '[الطرف الأول]', '[First Party]'], ['p2', '[الطرف الثاني]', '[Second Party]']].forEach(([k, ar, en]) => {
+      const p = (d && d[k]) || {}, nm = String(p.name || '').trim();
+      if (nm.length > 1) { pairs.push([nm, ar]); const W = nm.split(/\s+/); for (let k = W.length - 1; k >= 2; k--) pairs.push([W.slice(0, k).join(' '), ar]); if (W.length > 2) pairs.push([W[0] + ' ' + W[W.length - 1], ar]); }
+      if (p.id) pairs.push([String(p.id).trim(), '[رقم الهوية]']);
+      if (p.mobile) pairs.push([String(p.mobile).trim(), '[رقم الجوال]']);
+      if (p.dob) { pairs.push([p.dob, '[تاريخ الميلاد]']); const f = fmt(p.dob); if (f) pairs.push([f, '[تاريخ الميلاد]']); }
+      void en;
+    });
+    pairs.sort((a, b) => b[0].length - a[0].length);
+    const esc2 = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const w = document.createTreeWalker(box, NodeFilter.SHOW_TEXT), nodes = []; while (w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach((t) => { let v = t.nodeValue; pairs.forEach(([a, b]) => { if (a) v = v.replace(new RegExp(esc2(a), 'g'), b); }); t.nodeValue = maskPII(v).t; });
+    return box.innerHTML;
+  }
+  async function cloudSave(d, html) {
+    try {
+      if (!st.user || !html) return;
+      const lang = /bilingual-table/.test(html) ? 'both' : (d.lang === 'en' ? 'en' : 'ar');
+      await sb.from('saved_contracts').insert({ title: String(d.title || '').slice(0, 200), type_label: String(d.typeLabel || '').slice(0, 120), lang, html: anonHtml(html, d).slice(0, 390000) });
+    } catch (e) {}
+  }
+
+  window.OQ = { ready: READY, draft, open: () => open(), user: () => st.user, isSub, cloudSave, sb: () => sb, isAdmin: () => !!(st.prof && st.prof.is_admin), isIn: () => !!st.user, reloadTypes: () => loadSite(), refresh: () => { st.prof = null; return setUser(st.user); } };
   function boot() {
     mount();
     if (READY) {
