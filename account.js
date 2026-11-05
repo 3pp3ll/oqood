@@ -104,6 +104,8 @@
       <div class="acc-f"><label for="suName">الاسم</label><input id="suName" type="text" autocomplete="name" required></div>
       ${emailField('suEmail')}
       ${pwField('suPass', 'كلمة المرور (٨ أحرف على الأقل)', 'new-password')}
+      <p class="acc-s" style="font-size:.8rem;line-height:1.7;margin:6px 0">ملاحظة: المنصة تحفظ نسخة من <b>هيكل</b> العقود اللي تصيغها بعد حذف بياناتك الشخصية (الأسماء والهويات والجوالات والإيميلات)، لتحسين الصياغة. العقد الكامل يبقى في جهازك فقط. المنصة اجتهاد شخصي وليست شركة محاماة.</p>
+      <label class="acc-chk" style="display:flex;gap:8px;align-items:flex-start;font-size:.85rem;margin:4px 0 8px"><input type="checkbox" id="suAgree" style="margin-top:4px"> قرأت الملاحظة وأوافق على طريقة الحفظ.</label>
       <div class="acc-msg" id="suMsg" role="status"></div>
       <button class="acc-go" type="submit">إنشاء الحساب</button>
       <p class="acc-alt">عندك حساب؟ <button type="button" class="acc-lnk" data-go="login">سجّل دخولك</button></p>
@@ -204,6 +206,7 @@
       if (!nm) return msg('suMsg', 'اكتب اسمك.');
       if (!validEmail(em)) return msg('suMsg', 'اكتب إيميل صحيح.');
       if (pw.length < 8) return msg('suMsg', 'كلمة المرور لازم تكون ٨ أحرف أو أكثر.');
+      if (!$('#suAgree').checked) return msg('suMsg', 'لازم توافق على طريقة الحفظ عشان تكمل.');
       busy(f, true);
       const { data, error } = await sb.auth.signUp({ email: em, password: pw, options: { data: { name: nm }, emailRedirectTo: PAGE } });
       busy(f, false);
