@@ -71,3 +71,9 @@
 .src-box ol{margin:8px 0 0;padding-inline-start:20px;font-size:.88rem;line-height:1.8}
 .src-box a{color:#2a5f9e}
 .oq-drop{outline:2px dashed #c9a84c!important;outline-offset:3px;background:#fffbeb!important}
+
+/* نافذة الدخول بنص الشاشة (لما تنفتح من زر الصياغة) */
+.acc-scrim{position:fixed;inset:0;background:rgba(15,39,68,.45);z-index:1999}
+.acc-scrim[hidden]{display:none}
+.acc-menu.acc-float{position:fixed;inset:auto;top:50%!important;left:50%;right:auto;transform:translate(-50%,-50%);width:min(360px,calc(100vw - 32px));max-width:none;max-height:calc(100vh - 40px);overflow:auto;z-index:2000;animation:none}
+.acc-menu.acc-float::before{display:none}

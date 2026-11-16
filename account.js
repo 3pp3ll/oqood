@@ -47,6 +47,7 @@
     }
     paint();
     if (window.OQSign) OQSign.refresh(); if (window.OQAsk) OQAsk.refresh();
+    if (st.after) { const fn = st.after; st.after = null; st.note = null; setTimeout(fn, 50); }
   }
 
   // ---------- أدوات ----------
@@ -82,7 +83,7 @@
 
   const VIEWS = {
     login: () => `<form id="accLogin" novalidate>
-      <p class="acc-h">تسجيل الدخول</p><p class="acc-s">ادخل لحسابك عشان تصيغ عقودك.</p>${notReady}
+      <p class="acc-h">تسجيل الدخول</p><p class="acc-s">ادخل لحسابك عشان تصيغ عقودك.</p>${notReady}${st.note ? `<div class="acc-msg ok">${esc(st.note)}</div>` : ''}
       ${emailField('lgEmail')}
       ${pwField('lgPass', 'كلمة المرور', 'current-password')}
       <div class="acc-row"><label class="acc-chk"><input type="checkbox" id="lgRemember" ${remembered() ? 'checked' : ''}> تذكرني</label>
@@ -134,7 +135,7 @@
     },
   };
 
-  let wrap, btn, menu;
+  let wrap, btn, menu, scrim;
   function paint() {
     if (!wrap) return;
     btn.innerHTML = st.user ? `<span class="acc-av">${initial()}</span><span class="acc-dot"></span>` : IC.user;
@@ -143,8 +144,23 @@
     menu.hidden = !st.open;
     if (st.open) menu.innerHTML = VIEWS[st.user && st.view !== 'reset' ? 'me' : st.view]();
   }
-  function open(view) { st.open = true; if (view) st.view = view; paint(); menu.style.top = matchMedia('(max-width:560px)').matches ? Math.max(12, btn.getBoundingClientRect().bottom + 10) + 'px' : ''; const f = menu.querySelector('input'); if (f) f.focus(); }
-  function close() { st.open = false; st.flash = null; if (st.view !== 'reset') st.view = 'login'; paint(); }
+  function open(view) {
+    st.open = true; st.at = Date.now(); if (view) st.view = view;
+    // من زر الصياغة: نافذة بنص الشاشة بدل القائمة اللي فوق في الهيدر (عشان ما ترجع الصفحة لفوق)
+    const float = !!st.note;
+    menu.classList.toggle('acc-float', float);
+    if (float && menu.parentNode !== document.body) { document.body.appendChild(menu); document.body.appendChild(scrim); }
+    scrim.hidden = !float;
+    paint();
+    menu.style.top = !float && matchMedia('(max-width:560px)').matches ? Math.max(12, btn.getBoundingClientRect().bottom + 10) + 'px' : '';
+    const f = menu.querySelector('input'); if (f) f.focus({ preventScroll: true });
+  }
+  function close() {
+    st.open = false; st.flash = null; st.note = null; st.after = null; if (st.view !== 'reset') st.view = 'login';
+    if (scrim) scrim.hidden = true;
+    if (menu && menu.parentNode !== wrap) { menu.classList.remove('acc-float'); wrap.appendChild(menu); }
+    paint();
+  }
 
   function mount() {
     const home = document.getElementById('homeBtn');
@@ -153,8 +169,9 @@
     wrap.innerHTML = '<button type="button" class="acc-btn" id="accBtn" aria-haspopup="true" aria-expanded="false" aria-label="الحساب"></button><div class="acc-menu" id="accMenu" hidden></div>';
     if (home) home.replaceWith(wrap); else document.querySelector('.header .no-print')?.prepend(wrap);
     btn = $('#accBtn'); menu = $('#accMenu');
+    scrim = document.createElement('div'); scrim.className = 'acc-scrim no-print'; scrim.hidden = true;
     btn.addEventListener('click', (e) => { e.stopPropagation(); st.open ? close() : open(); });
-    document.addEventListener('click', (e) => { if (st.open && !e.composedPath().includes(wrap) && document.contains(e.target)) close(); });
+    document.addEventListener('click', (e) => { if (st.open && Date.now() - (st.at || 0) > 400 && !e.composedPath().includes(wrap) && !e.composedPath().includes(menu) && document.contains(e.target)) close(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && st.open) { close(); btn.focus(); } });
     menu.addEventListener('click', onMenuClick);
     menu.addEventListener('submit', onSubmit);
@@ -192,7 +209,7 @@
       const { error } = await sb.auth.signInWithPassword({ email: em, password: pw });
       busy(f, false);
       if (error) return msg('lgMsg', errText(error));
-      st.view = 'login'; close();
+      const after = st.after; st.view = 'login'; close(); st.after = after;
     } else if (f.id === 'accForgot') {
       const em = $('#fgEmail').value.trim();
       if (!validEmail(em)) return msg('fgMsg', 'اكتب إيميل صحيح.');
@@ -228,7 +245,7 @@
 
   // ---------- الصياغة عبر السيرفر ----------
   async function draft(payload) {
-    if (!st.user) { open('login'); throw Object.assign(new Error('سجّل دخولك أولاً عشان تصيغ العقد.'), { quiet: true }); }
+    if (!st.user) { st.note = 'سجّل دخولك عشان تكمل الصياغة. بياناتك اللي عبيتها باقية.'; open('login'); throw Object.assign(new Error('سجّل دخولك أولاً عشان تصيغ العقد.'), { quiet: true }); }
     const { data, error } = await sb.functions.invoke('draft', { body: { ...payload, userKey: isSub() ? '' : ownKey() } });
     if (error) {
       let m = error.message;
@@ -856,7 +873,7 @@
     } catch (e) {}
   }
 
-  window.OQ = { ready: READY, draft, open: () => open(), user: () => st.user, isSub, cloudSave, sb: () => sb, isAdmin: () => !!(st.prof && st.prof.is_admin), isIn: () => !!st.user, reloadTypes: () => loadSite(), refresh: () => { st.prof = null; return setUser(st.user); } };
+  window.OQ = { ready: READY, draft, open: (note, after) => { st.note = note || null; st.after = after || null; open('login'); }, user: () => st.user, isSub, cloudSave, sb: () => sb, isAdmin: () => !!(st.prof && st.prof.is_admin), isIn: () => !!st.user, reloadTypes: () => loadSite(), refresh: () => { st.prof = null; return setUser(st.user); } };
   function boot() {
     mount();
     if (READY) {
