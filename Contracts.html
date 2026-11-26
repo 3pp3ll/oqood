@@ -147,7 +147,7 @@ body{font-family:'Tajawal',sans-serif;background:#eef1f4;color:var(--ink);min-he
     <div class="row g-3">
       <div class="col-md-6">
         <div class="party-card">
-          <h6><span id="lblP1">الطرف الأول</span> <span class="req">*</span></h6>
+          <h6><span id="lblP1">الطرف الأول</span> <span class="req req-party">*</span></h6>
           <input class="form-control mb-2" id="p1_name" placeholder="الاسم الكامل">
           <input class="form-control mb-2" id="p1_id" placeholder="رقم الهوية / الإقامة" maxlength="11">
           <input class="form-control mb-2" id="p1_mobile" placeholder="رقم الجوال">
@@ -156,7 +156,7 @@ body{font-family:'Tajawal',sans-serif;background:#eef1f4;color:var(--ink);min-he
       </div>
       <div class="col-md-6">
         <div class="party-card">
-          <h6><span id="lblP2">الطرف الثاني</span> <span class="req">*</span></h6>
+          <h6><span id="lblP2">الطرف الثاني</span> <span class="req req-party">*</span></h6>
           <input class="form-control mb-2" id="p2_name" placeholder="الاسم الكامل">
           <input class="form-control mb-2" id="p2_id" placeholder="رقم الهوية / الإقامة" maxlength="11">
           <input class="form-control mb-2" id="p2_mobile" placeholder="رقم الجوال">
@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
   function validateID(id) {
-    if (!id) return true;
+    if (!id || !/\d/.test(id)) return true;
     return /^\d{10,11}$/.test(id.replace(/\D/g,''));
   }
 
@@ -508,6 +508,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('contractType').addEventListener('change', e => { const o = document.getElementById('contractTypeOther'); o.hidden = e.target.value !== '__other'; if (!o.hidden) o.focus(); ndaSync(); });
   // اتفاقية السرية: خانات اسم المشروع ونبذته، وتنبني منها طلب الصياغة
   function isNDA() { const s = document.getElementById('contractType'); const tx = (typeOther() || s.options[s.selectedIndex]?.text || '') + ' ' + s.value; return /سرية|سرّية|عدم الإفصاح|nda|confidential/i.test(tx); }
+  setInterval(() => { const adm = !!(window.OQ && OQ.isAdmin && OQ.isAdmin()); document.querySelectorAll('.req-party').forEach((x) => { x.hidden = adm; }); }, 1500);
   function ndaSync() {
     const on = isNDA(), box = document.getElementById('ndaBox'); if (!box) return;
     box.hidden = !on; document.getElementById('reqRequest').hidden = on;
@@ -553,6 +554,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const key = localStorage.getItem('oqood_openrouter_key') || '';
     if (useServer && !OQ.user()) { OQ.open('سجّل دخولك عشان تكمل الصياغة. بياناتك اللي عبيتها باقية، وبعد الدخول تبدأ الصياغة تلقائياً.', generateWithAI); return; }
     if (!useServer && !key) { alert('أضغط على الشعار "ع" خمس مرات لإدخال مفتاح OpenRouter'); return; }
+    // الأدمن: بيانات الطرفين اختيارية. إذا تركها فاضية تنصاغ بفراغات منقطة تنكتب باليد بعد الطباعة
+    if (window.OQ && OQ.isAdmin && OQ.isAdmin()) {
+      const blank = [];
+      ['p1', 'p2'].forEach((k) => { if (!String(d[k].name || '').trim()) { blank.push(k === 'p1' ? 'الطرف الأول' : 'الطرف الثاني'); d[k] = { name: '........................................', id: '....................', mobile: '....................', dob: '' }; } });
+      if (blank.length) d.extraTerms = (d.extraTerms ? d.extraTerms + '\n' : '') + `بيانات ${blank.join(' و')} تنكتب يدوياً بعد الطباعة: اترك مكان الاسم ورقم الهوية والجوال فراغات منقطة (....) مثل ما هي، ولا تخترع أي اسم أو رقم، واكتب في خانة التوقيع الصفة فقط (الطرف الأول / الطرف الثاني).`;
+    }
     if (isNDA() && (!d.ndaProject || !d.ndaBrief)) { alert('اكتب اسم المشروع ونبذة عنه.'); document.getElementById(d.ndaProject ? 'ndaBrief' : 'ndaProject').focus(); return; }
     if (!d.p1.name || !d.p2.name || !d.title || !d.userRequest) {
       alert('يرجى ملء الحقول الإلزامية');
@@ -660,7 +667,7 @@ ${uploadedText ? '\n\nنص مرفوع للاستفادة:\n'+uploadedText.substr
         <div class="disclaimer">${escH(SITE.disclaimer)}</div>
       `;
 
-      if (window.OQSign) OQSign.reset({ p1: d.p1.name, p2: d.p2.name, title: d.title });
+      if (window.OQSign) OQSign.reset({ p1: /^\.+$/.test(d.p1.name) ? '' : d.p1.name, p2: /^\.+$/.test(d.p2.name) ? '' : d.p2.name, title: d.title });
       if (window.OQ && OQ.cloudSave) OQ.cloudSave(d, preview.innerHTML);
       const sb = document.getElementById('sourcesBox');
       sb.hidden = !sources.length;
