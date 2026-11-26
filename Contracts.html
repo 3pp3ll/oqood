@@ -117,6 +117,7 @@ body{font-family:'Tajawal',sans-serif;background:#eef1f4;color:var(--ink);min-he
   .bilingual-table thead{display:table-header-group}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+  .nda-hint{background:#f4f1e8;border:1px solid #e5dcc3;border-radius:10px;padding:10px 12px;font-size:.92rem;color:#5b4a1f;line-height:1.7}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -182,7 +183,19 @@ body{font-family:'Tajawal',sans-serif;background:#eef1f4;color:var(--ink);min-he
       <div class="col-md-6"><label class="form-label" id="lblDate">التاريخ</label><input type="date" class="form-control" id="contractDate"></div>
       <div class="col-md-6"><label class="form-label" id="lblValue">القيمة</label><div class="input-group"><input type="number" inputmode="decimal" min="0" step="any" class="form-control" id="contractValue" name="contract-amount" autocomplete="off" data-1p-ignore data-lpignore="true"><select class="form-select" id="contractCurrency" style="max-width:46%" autocomplete="off"></select></div></div>
     </div>
-    <div class="mt-3"><label class="form-label"><span id="lblRequest">ما تريده في العقد</span> <span class="req">*</span></label>
+    <div class="row g-3 mt-0" id="ndaBox" hidden>
+      <div class="col-12"><div class="nda-hint"><i class="bi bi-shield-lock"></i> اكتب اسم المشروع ونبذة بسيطة عنه، ونصيغ لك بنود السرية كاملة لحمايته. خانة «ما تريده في العقد» تصير اختيارية.</div></div>
+      <div class="col-md-6"><label class="form-label" for="ndaProject">اسم المشروع <span class="req">*</span></label>
+        <input class="form-control" id="ndaProject" placeholder="مثال: تطبيق «مِراس»" autocomplete="off"></div>
+      <div class="col-md-6"><label class="form-label" for="ndaTerm">مدة الالتزام بالسرية</label>
+        <select class="form-select" id="ndaTerm"><option>سنتين من تاريخ التوقيع</option><option selected>3 سنوات من تاريخ التوقيع</option><option>5 سنوات من تاريخ التوقيع</option><option>طوال مدة التعاون وسنتين بعد انتهائه</option><option>دائمة ما دامت المعلومات سرية</option></select></div>
+      <div class="col-12"><label class="form-label" for="ndaBrief">نبذة عن المشروع <span class="req">*</span></label>
+        <textarea class="form-control" id="ndaBrief" rows="3" placeholder="مثال: منصة تحليل أسهم بالذكاء الاصطناعي، وبنعرض على الطرف الثاني الفكرة وخطة العمل والكود عشان يقيّمها كمستثمر."></textarea></div>
+      <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" id="ndaMutual"><label class="form-check-label" for="ndaMutual">سرية متبادلة (الطرفين يتبادلون معلومات سرية)</label></div>
+        <div class="form-check"><input class="form-check-input" type="checkbox" id="ndaNonSolicit" checked><label class="form-check-label" for="ndaNonSolicit">منع التواصل المباشر مع عملاء المشروع وشركائه أو استقطاب موظفيه</label></div>
+        <div class="form-check"><input class="form-check-input" type="checkbox" id="ndaNonCompete"><label class="form-check-label" for="ndaNonCompete">منع تنفيذ فكرة منافسة مبنية على المعلومات</label></div></div>
+    </div>
+    <div class="mt-3"><label class="form-label"><span id="lblRequest">ما تريده في العقد</span> <span class="req" id="reqRequest">*</span></label>
       <textarea class="form-control" id="userRequest" rows="4" placeholder="اكتب بلغتك العادية..."></textarea></div>
     <div class="mt-3"><label class="form-label" id="lblExtra">شروط إضافية (اختياري)</label>
       <textarea class="form-control" id="extraTerms" rows="2"></textarea></div>
@@ -467,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const escH = (x) => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   function collectData() {
-    return {
+    return ndaFill({
       typeLabel: typeOther() || document.getElementById('contractType').options[document.getElementById('contractType').selectedIndex].text,
       typeOther: typeOther(),
       typeLaw: document.getElementById('contractType').selectedOptions[0]?.dataset.law || '',
@@ -482,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function() {
       lang: currentLang,
       p1: { name: document.getElementById('p1_name').value, id: document.getElementById('p1_id').value, mobile: document.getElementById('p1_mobile').value, dob: document.getElementById('p1_dob').value },
       p2: { name: document.getElementById('p2_name').value, id: document.getElementById('p2_id').value, mobile: document.getElementById('p2_mobile').value, dob: document.getElementById('p2_dob').value }
-    };
+    });
   }
 
   function formatDate(d) {
@@ -492,7 +505,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // «أخرى»: تكتب نوع العقد بنفسك، ولو كنت المالك ينضاف للقائمة (عقود أخرى) عشان يطلع لك المرة الجاية
   function typeOther() { const s = document.getElementById('contractType'), o = document.getElementById('contractTypeOther'); return s && s.value === '__other' && o ? o.value.trim().replace(/\s+/g, ' ').slice(0, 60) : ''; }
-  document.getElementById('contractType').addEventListener('change', e => { const o = document.getElementById('contractTypeOther'); o.hidden = e.target.value !== '__other'; if (!o.hidden) o.focus(); });
+  document.getElementById('contractType').addEventListener('change', e => { const o = document.getElementById('contractTypeOther'); o.hidden = e.target.value !== '__other'; if (!o.hidden) o.focus(); ndaSync(); });
+  // اتفاقية السرية: خانات اسم المشروع ونبذته، وتنبني منها طلب الصياغة
+  function isNDA() { const s = document.getElementById('contractType'); const tx = (typeOther() || s.options[s.selectedIndex]?.text || '') + ' ' + s.value; return /سرية|سرّية|عدم الإفصاح|nda|confidential/i.test(tx); }
+  function ndaSync() {
+    const on = isNDA(), box = document.getElementById('ndaBox'); if (!box) return;
+    box.hidden = !on; document.getElementById('reqRequest').hidden = on;
+    const nda = document.getElementById('includeNDA'); if (nda) nda.closest('.form-check').hidden = on;
+  }
+  document.getElementById('contractTypeOther').addEventListener('input', ndaSync);
+  new MutationObserver(ndaSync).observe(document.getElementById('contractType'), { childList: true, subtree: true });
+  function ndaFill(d) {
+    if (!isNDA()) return d;
+    const v = (id) => (document.getElementById(id)?.value || '').trim(), c = (id) => !!document.getElementById(id)?.checked;
+    const proj = v('ndaProject'), brief = v('ndaBrief');
+    d.ndaProject = proj; d.ndaBrief = brief;
+    if (!proj || !brief) return d;
+    if (!d.title.trim()) d.title = 'اتفاقية سرية وعدم إفصاح — ' + proj;
+    d.userRequest = [
+      `اتفاقية سرية وعدم إفصاح${c('ndaMutual') ? ' متبادلة بين الطرفين' : ' يكون فيها الطرف الأول هو المفصح والطرف الثاني هو المتلقي للمعلومات'} لحماية معلومات مشروع «${proj}».`,
+      `نبذة عن المشروع: ${brief}`,
+      `مدة الالتزام بالسرية: ${v('ndaTerm')}.`,
+      'صغ بنود السرية كاملة ومفصلة: تعريف المعلومات السرية بشكل واسع يشمل الفكرة ونموذج العمل والخطط والبيانات والكود والتصاميم والأسعار والعملاء، والاستثناءات المعتادة، والغرض المسموح لاستخدام المعلومات، والتزامات المتلقي في الحفظ وعدم النسخ وحصر الاطلاع على من يحتاج، والإفصاح بأمر نظامي مع الإشعار المسبق، وإعادة المعلومات أو إتلافها عند الطلب، وأن الاتفاقية لا تمنح أي ترخيص أو ملكية في المشروع، ومدة السرية واستمرارها بعد الانتهاء، والإخلال والتعويض والشرط الجزائي، والنظام الواجب التطبيق وتسوية النزاعات في المملكة.',
+      c('ndaNonSolicit') ? 'أضف بند عدم التواصل المباشر مع عملاء المشروع وشركائه وموردّيه وعدم استقطاب موظفيه طوال مدة السرية.' : '',
+      c('ndaNonCompete') ? 'أضف بند عدم المنافسة: لا يجوز للمتلقي تنفيذ أو دعم مشروع منافس مبني على المعلومات السرية، بمدة ونطاق معقولين.' : '',
+      d.userRequest.trim() ? 'ملاحظات إضافية من المستخدم: ' + d.userRequest.trim() : ''
+    ].filter(Boolean).join('\n');
+    d.includeNDA = false;
+    return d;
+  }
   async function addOtherType(label) {
     try {
       if (!(window.OQ && OQ.isAdmin && OQ.isAdmin() && OQ.sb)) return;
@@ -512,6 +553,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const key = localStorage.getItem('oqood_openrouter_key') || '';
     if (useServer && !OQ.user()) { OQ.open('سجّل دخولك عشان تكمل الصياغة. بياناتك اللي عبيتها باقية، وبعد الدخول تبدأ الصياغة تلقائياً.', generateWithAI); return; }
     if (!useServer && !key) { alert('أضغط على الشعار "ع" خمس مرات لإدخال مفتاح OpenRouter'); return; }
+    if (isNDA() && (!d.ndaProject || !d.ndaBrief)) { alert('اكتب اسم المشروع ونبذة عنه.'); document.getElementById(d.ndaProject ? 'ndaBrief' : 'ndaProject').focus(); return; }
     if (!d.p1.name || !d.p2.name || !d.title || !d.userRequest) {
       alert('يرجى ملء الحقول الإلزامية');
       return;
