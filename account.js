@@ -454,6 +454,14 @@
     }
     return parts.join('\n\n');
   }
+  // نص طالع من PDF بخط ما يحمل جدول حروف سليم: حروف عربية ملزوقة فيها رموز أو حروف لاتينية (مثل «ﻖ اﻻﻟ^`_و»)
+  function garbled(t) {
+    const A = '\\u0621-\\u064A\\uFB50-\\uFEFC', J = '\\^`_|~{}<>\\[\\]&*\\\\\\uE000-\\uF8FF\\uFFFDA-Za-z';
+    const ar = (t.match(new RegExp('[' + A + ']', 'g')) || []).length;
+    if (ar < 200) return false;
+    const junk = (t.match(new RegExp('[' + A + '][' + J + ']|[' + J + '][' + A + ']', 'g')) || []).length;
+    return junk >= 15 && junk / ar > 0.008;
+  }
   async function readUpload(files, step) {
     files = [...files].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
     const imgs = files.filter(isImg), docs = files.filter((f) => !isImg(f));
@@ -462,7 +470,7 @@
       const t = await fileText(f);
       if (/\.pdf$/i.test(f.name)) {
         const pdf = await window.pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
-        if (t.replace(/\s+/g, '').length < 150 * pdf.numPages) { pages = pages.concat(await pdfPages(f)); continue; }   // PDF مصوّر
+        if (t.replace(/\s+/g, '').length < 150 * pdf.numPages || garbled(t)) { pages = pages.concat(await pdfPages(f)); continue; }   // PDF مصوّر، أو خطه ما يطلع نص عربي سليم (طلاسم)
       }
       text += t + '\n\n';
     }
